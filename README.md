@@ -1,4 +1,4 @@
-# RESET App
+# Pausible
 
 An App for Mental Wellness
 
