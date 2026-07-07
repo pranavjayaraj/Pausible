@@ -9,10 +9,9 @@ import com.reset.feature.sessions.SessionsViewModel
 import com.reset.feature.sessions.navigation.SessionsIntent
 
 /**
- * Composable entry point for the Sessions feature, placed into the app's NavHost as the
- * dashboard's middle tab. Back pops via the ViewModel's injected
- * [com.reset.navigation.Navigator]; the screen renders on the app-provided
- * [com.reset.core.designsystem.AppBackground].
+ * Composable entry point for the break-suggestion list, placed into the app's NavHost as
+ * the dashboard's middle tab. Back pops via the ViewModel's injected
+ * [com.reset.navigation.Navigator].
  */
 @Composable
 fun SessionsRoute() {

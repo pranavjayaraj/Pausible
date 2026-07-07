@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 /** One-shot navigation intents emitted by features and applied by the host. */
 sealed interface NavEvent {
-    data class Navigate(val screen: Screen) : NavEvent
+    data class Navigate(val screen: Screen, val singleTop: Boolean = true) : NavEvent
 
     /**
      * Bottom-bar tab change: shows [screen] as a top-level destination with the standard

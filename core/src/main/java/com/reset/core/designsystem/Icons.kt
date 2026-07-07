@@ -4,13 +4,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
  * Tiny Canvas icons that mirror the inline SVGs in the design, avoiding a
@@ -20,31 +19,169 @@ import kotlin.math.sin
 private const val GRID = 24f
 
 @Composable
-fun GearIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary) {
+fun HomeIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
     Canvas(modifier) {
-        val s = size.minDimension
-        val unit = s / GRID
-        val stroke = 1.8f * unit
-        drawCircle(tint, radius = 3.2f * unit, center = center, style = Stroke(stroke))
-        val rInner = 5.5f * unit
-        val rOuter = 9.5f * unit
-        repeat(8) { i ->
-            val a = Math.toRadians((i * 45).toDouble())
-            val dx = cos(a).toFloat()
-            val dy = sin(a).toFloat()
-            drawLine(
-                color = tint,
-                start = Offset(center.x + dx * rInner, center.y + dy * rInner),
-                end = Offset(center.x + dx * rOuter, center.y + dy * rOuter),
-                strokeWidth = stroke,
-                cap = StrokeCap.Round,
-            )
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val stroke = Stroke(2f * unit, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // M3 10.5 12 3l9 7.5 / M5 9.5V20h14V9.5
+        val roof = Path().apply {
+            moveTo(p(3f, 10.5f).x, p(3f, 10.5f).y)
+            lineTo(p(12f, 3f).x, p(12f, 3f).y)
+            lineTo(p(21f, 10.5f).x, p(21f, 10.5f).y)
         }
+        drawPath(roof, tint, style = stroke)
+        val walls = Path().apply {
+            moveTo(p(5f, 9.5f).x, p(5f, 9.5f).y)
+            lineTo(p(5f, 20f).x, p(5f, 20f).y)
+            lineTo(p(19f, 20f).x, p(19f, 20f).y)
+            lineTo(p(19f, 9.5f).x, p(19f, 9.5f).y)
+        }
+        drawPath(walls, tint, style = stroke)
+    }
+}
+
+/** The design's stopwatch: top button, round body, hands at 12→v-l. */
+@Composable
+fun TimerIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val strokeWidth = 2f * unit
+        // M10 2h4
+        drawLine(tint, p(10f, 2f), p(14f, 2f), strokeWidth, StrokeCap.Round)
+        // Body circle r8 centred at (12,12).
+        drawCircle(tint, radius = 8f * unit, center = p(12f, 12f), style = Stroke(strokeWidth))
+        // M12 9v4l2.5 1.5
+        val hands = Path().apply {
+            moveTo(p(12f, 9f).x, p(12f, 9f).y)
+            lineTo(p(12f, 13f).x, p(12f, 13f).y)
+            lineTo(p(14.5f, 14.5f).x, p(14.5f, 14.5f).y)
+        }
+        drawPath(hands, tint, style = Stroke(strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+/** Three rising bars — the stats tab marker. */
+@Composable
+fun StatsIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val strokeWidth = 2f * unit
+        drawLine(tint, p(6f, 20f), p(6f, 14f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(12f, 20f), p(12f, 8f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(18f, 20f), p(18f, 11f), strokeWidth, StrokeCap.Round)
     }
 }
 
 @Composable
-fun BackIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary) {
+fun PlayIcon(modifier: Modifier = Modifier, tint: Color = AppColors.accent) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val triangle = Path().apply {
+            moveTo(p(7f, 4f).x, p(7f, 4f).y)
+            lineTo(p(20f, 12f).x, p(20f, 12f).y)
+            lineTo(p(7f, 20f).x, p(7f, 20f).y)
+            close()
+        }
+        drawPath(triangle, tint)
+    }
+}
+
+/** Small clock used on the break-card duration tags. */
+@Composable
+fun ClockIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val strokeWidth = 2.4f * unit
+        drawCircle(tint, radius = 9f * unit, center = p(12f, 12f), style = Stroke(strokeWidth))
+        val hands = Path().apply {
+            moveTo(p(12f, 7f).x, p(12f, 7f).y)
+            lineTo(p(12f, 12f).x, p(12f, 12f).y)
+            lineTo(p(15f, 14f).x, p(15f, 14f).y)
+        }
+        drawPath(hands, tint, style = Stroke(strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+/** Jumping-jack figure — the body-stretches break card. */
+@Composable
+fun StretchIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textOnDark) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val strokeWidth = 2f * unit
+        drawCircle(tint, radius = 1.8f * unit, center = p(12f, 4.5f), style = Stroke(strokeWidth))
+        // Torso M12 7v6, arms M12 9l±5 2, legs M12 13l±3 6
+        drawLine(tint, p(12f, 7f), p(12f, 13f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(12f, 9f), p(7f, 11f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(12f, 9f), p(17f, 11f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(12f, 13f), p(9f, 19f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(12f, 13f), p(15f, 19f), strokeWidth, StrokeCap.Round)
+    }
+}
+
+/** Closed eye with a strike — the design's meditate break card. */
+@Composable
+fun ClosedEyeIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val strokeWidth = 2f * unit
+        // Upper lid: M2 12s3.5-6 10-6 10 6 10 6
+        val lid = Path().apply {
+            moveTo(p(2f, 12f).x, p(2f, 12f).y)
+            cubicTo(p(5.5f, 6f).x, p(5.5f, 6f).y, p(18.5f, 6f).x, p(18.5f, 6f).y, p(22f, 12f).x, p(22f, 12f).y)
+        }
+        drawPath(lid, tint, style = Stroke(strokeWidth, cap = StrokeCap.Round))
+        // Small under-curve: M8.5 13.5a3.5 3.5 0 0 0 5 0
+        val under = Path().apply {
+            addArc(
+                Rect(center = p(11f, 13.5f), radius = 2.5f * unit),
+                startAngleDegrees = 20f,
+                sweepAngleDegrees = 140f,
+            )
+        }
+        drawPath(under, tint, style = Stroke(strokeWidth, cap = StrokeCap.Round))
+        // Strike: M3 4l18 16
+        drawLine(tint, p(3f, 4f), p(21f, 20f), strokeWidth, StrokeCap.Round)
+    }
+}
+
+/** Three wind lines — the deep-breathing break card. */
+@Composable
+fun BreathIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textOnDark) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val stroke = Stroke(2f * unit, cap = StrokeCap.Round)
+        // Simplified wind glyph: three streaks with curled tails.
+        val top = Path().apply {
+            moveTo(p(3f, 8f).x, p(3f, 8f).y)
+            lineTo(p(12f, 8f).x, p(12f, 8f).y)
+            cubicTo(p(15f, 8f).x, p(15f, 8f).y, p(15f, 3.5f).x, p(15f, 3.5f).y, p(12f, 4.2f).x, p(12f, 4.2f).y)
+        }
+        drawPath(top, tint, style = stroke)
+        val mid = Path().apply {
+            moveTo(p(3f, 12f).x, p(3f, 12f).y)
+            lineTo(p(19f, 12f).x, p(19f, 12f).y)
+            cubicTo(p(22f, 12f).x, p(22f, 12f).y, p(22f, 7.5f).x, p(22f, 7.5f).y, p(19f, 8.2f).x, p(19f, 8.2f).y)
+        }
+        drawPath(mid, tint, style = stroke)
+        val bottom = Path().apply {
+            moveTo(p(3f, 16f).x, p(3f, 16f).y)
+            lineTo(p(16f, 16f).x, p(16f, 16f).y)
+            cubicTo(p(19f, 16f).x, p(19f, 16f).y, p(19f, 20.5f).x, p(19f, 20.5f).y, p(16f, 19.8f).x, p(16f, 19.8f).y)
+        }
+        drawPath(bottom, tint, style = stroke)
+    }
+}
+
+@Composable
+fun BackIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
     Canvas(modifier) {
         val unit = size.minDimension / GRID
         fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
@@ -58,70 +195,41 @@ fun BackIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary)
 }
 
 @Composable
-fun HomeIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary) {
+fun CloseIcon(modifier: Modifier = Modifier, tint: Color = AppColors.accentDark) {
     Canvas(modifier) {
         val unit = size.minDimension / GRID
         fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
-        val stroke = Stroke(1.8f * unit, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        val roof = Path().apply {
-            moveTo(p(4f, 11.5f).x, p(4f, 11.5f).y)
-            lineTo(p(12f, 4.5f).x, p(12f, 4.5f).y)
-            lineTo(p(20f, 11.5f).x, p(20f, 11.5f).y)
-        }
-        drawPath(roof, tint, style = stroke)
-        val walls = Path().apply {
-            moveTo(p(6.5f, 10.5f).x, p(6.5f, 10.5f).y)
-            lineTo(p(6.5f, 19.5f).x, p(6.5f, 19.5f).y)
-            lineTo(p(17.5f, 19.5f).x, p(17.5f, 19.5f).y)
-            lineTo(p(17.5f, 10.5f).x, p(17.5f, 10.5f).y)
-        }
-        drawPath(walls, tint, style = stroke)
-    }
-}
-
-/** Concentric ripple rings — the sit-history / sessions marker. */
-@Composable
-fun RippleIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary) {
-    Canvas(modifier) {
-        val unit = size.minDimension / GRID
-        val stroke = Stroke(1.8f * unit, cap = StrokeCap.Round)
-        drawCircle(tint, radius = 2.6f * unit, center = center, style = stroke)
-        drawCircle(tint.copy(alpha = tint.alpha * 0.7f), radius = 6f * unit, center = center, style = stroke)
-        drawCircle(tint.copy(alpha = tint.alpha * 0.4f), radius = 9.4f * unit, center = center, style = stroke)
+        val strokeWidth = 2f * unit
+        drawLine(tint, p(6f, 6f), p(18f, 18f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(18f, 6f), p(6f, 18f), strokeWidth, StrokeCap.Round)
     }
 }
 
 @Composable
-fun ProfileIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary) {
+fun PlusIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textOnDark) {
     Canvas(modifier) {
         val unit = size.minDimension / GRID
         fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
-        val stroke = Stroke(1.8f * unit, cap = StrokeCap.Round)
-        drawCircle(tint, radius = 3.4f * unit, center = p(12f, 8f), style = stroke)
-        val shoulders = Path().apply {
-            moveTo(p(5f, 19.5f).x, p(5f, 19.5f).y)
-            quadraticTo(p(12f, 13f).x, p(12f, 13f).y, p(19f, 19.5f).x, p(19f, 19.5f).y)
-        }
-        drawPath(shoulders, tint, style = stroke)
+        val strokeWidth = 2f * unit
+        drawLine(tint, p(12f, 5f), p(12f, 19f), strokeWidth, StrokeCap.Round)
+        drawLine(tint, p(5f, 12f), p(19f, 12f), strokeWidth, StrokeCap.Round)
     }
 }
 
 @Composable
-fun ClosedEyeIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textPrimary) {
+fun AppleIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textOnDark) {
     Canvas(modifier) {
         val unit = size.minDimension / GRID
-        fun x(v: Float) = v * unit
-        fun y(v: Float) = v * unit
-        val stroke = Stroke(2f * unit, cap = StrokeCap.Round)
-        // downward eye curve
-        val lid = Path().apply {
-            moveTo(x(4f), y(10f))
-            quadraticTo(x(12f), y(16f), x(20f), y(10f))
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        // Compact solid apple: body + leaf, close enough at 15dp.
+        drawCircle(tint, radius = 4.6f * unit, center = p(9.5f, 13.5f))
+        drawCircle(tint, radius = 4.6f * unit, center = p(14.5f, 13.5f))
+        val leaf = Path().apply {
+            moveTo(p(12f, 7.5f).x, p(12f, 7.5f).y)
+            cubicTo(p(12.5f, 4.5f).x, p(12.5f, 4.5f).y, p(14.5f, 3f).x, p(14.5f, 3f).y, p(15.5f, 3f).x, p(15.5f, 3f).y)
+            cubicTo(p(15.5f, 5f).x, p(15.5f, 5f).y, p(14f, 7.5f).x, p(14f, 7.5f).y, p(12f, 7.5f).x, p(12f, 7.5f).y)
+            close()
         }
-        drawPath(lid, tint, style = stroke)
-        // three short lashes
-        drawLine(tint, Offset(x(7f), y(13.4f)), Offset(x(6f), y(15.4f)), 2f * unit, StrokeCap.Round)
-        drawLine(tint, Offset(x(12f), y(14.8f)), Offset(x(12f), y(17f)), 2f * unit, StrokeCap.Round)
-        drawLine(tint, Offset(x(17f), y(13.4f)), Offset(x(18f), y(15.4f)), 2f * unit, StrokeCap.Round)
+        drawPath(leaf, tint)
     }
 }

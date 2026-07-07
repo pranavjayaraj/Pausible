@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.reset.androidApplicationCompose)
     alias(libs.plugins.reset.hilt)
+    // The app-owned OnboardingDestination is a @Serializable typed route.
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -16,12 +18,14 @@ android {
 dependencies {
     implementation(project(":core"))
     implementation(project(":navigation"))
+    implementation(project(":feature:builder"))
+    implementation(project(":feature:builder:api"))
     implementation(project(":feature:home"))
     implementation(project(":feature:home:api"))
     implementation(project(":feature:sessions"))
     implementation(project(":feature:sessions:api"))
-    implementation(project(":feature:settings"))
-    implementation(project(":feature:settings:api"))
+    implementation(project(":feature:profile"))
+    implementation(project(":feature:profile:api"))
     implementation(project(":model"))
     implementation(project(":repository"))
     // The app host owns the real navigation graph (NavHost) and drives ObserveNavigation,
