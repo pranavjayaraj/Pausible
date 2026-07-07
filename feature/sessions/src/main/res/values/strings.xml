@@ -1,15 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="sessions_title">SESSIONS</string>
-    <string name="sessions_section_history">Your sit history</string>
+    <!-- Break-suggestion list -->
+    <string name="sessions_title">Time for a breather!</string>
+    <string name="sessions_subtitle">Great focus session. Let\'s recharge for a few minutes.</string>
+    <string name="sessions_stretch">Body Stretches</string>
+    <string name="sessions_stretch_mins">2 MINS</string>
+    <string name="sessions_meditate">Meditate</string>
+    <string name="sessions_meditate_mins">1 MIN</string>
+    <string name="sessions_breathing">Deep Breathing</string>
+    <string name="sessions_breathing_mins">3 MINS</string>
+    <string name="sessions_skip">SKIP FOR NOW</string>
 
-    <string name="sessions_stat_sits">sits</string>
-    <string name="sessions_stat_time">time resting</string>
-    <string name="sessions_stat_streak">day streak</string>
+    <!-- Session experience: focus -->
+    <string name="session_keep_eyes_closed">Please keep your eyes closed…</string>
+    <string name="session_pause">Pause</string>
+    <string name="session_resume">Resume</string>
+    <string name="session_end">End Session</string>
+    <string name="session_countdown_content_description">%1$s remaining</string>
 
-    <string name="sessions_empty_title">No sits yet</string>
-    <string name="sessions_empty_body">Your first reset will show up here. Head to Home and take a moment.</string>
-
-    <string name="sessions_error_title">Couldn\'t load your sessions</string>
-    <string name="sessions_retry">Try again</string>
+    <!-- Session experience: guided breathing -->
+    <string name="session_breath_in">Breathe in…</string>
+    <string name="session_breath_out">Breathe out…</string>
+    <string name="session_break_title_stretch">BODY STRETCHES · 2 MIN</string>
+    <string name="session_break_title_meditate">MEDITATE · 1 MIN</string>
+    <string name="session_break_title_breathing">DEEP BREATHING · 3 MIN</string>
+    <string name="session_break_title_warmup">WARM-UP · 3 DEEP BREATHS</string>
+    <string name="session_finish_early">Finish early</string>
 </resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Session builder -->
+    <string name="builder_title">Craft your session</string>
+    <string name="builder_back">Back</string>
+    <string name="builder_pace_intro">Sprout is breathing at your pace — %1$s. Make it yours.</string>
+    <string name="builder_suggests_title">Sprout suggests</string>
+    <string name="builder_suggest_morning">Morning kickstart — Energy · 10 min · Forest</string>
+    <string name="builder_suggest_afternoon">Afternoon reset — Focus · 20 min · Rain</string>
+    <string name="builder_suggest_evening">Evening unwind — Unwind · 15 min · Ocean</string>
+    <string name="builder_suggest_night">Wind down — Sleep · 20 min · Silence</string>
+    <string name="builder_try_it">Try it</string>
+    <string name="builder_my_sessions">My sessions</string>
+    <string name="builder_whats_this_for">What\'s this for?</string>
+    <string name="builder_how_long">How long?</string>
+    <string name="builder_duration_chip">%1$d min</string>
+    <string name="builder_pick_soundscape">Pick your soundscape</string>
+    <string name="builder_sound_tag_main">MAIN</string>
+    <string name="builder_sound_tag_layer">LAYER</string>
+    <string name="builder_mix_side">%1$s · %2$d%%</string>
+    <string name="builder_mix_hint">Drag to balance your mix · tap a selected tile to remove it</string>
+    <string name="builder_breathing_pace">Breathing pace</string>
+    <string name="builder_pace_breath">%1$ds breath</string>
+    <string name="builder_daily_reminder">Daily reminder</string>
+    <string name="builder_extras">Extras</string>
+    <string name="builder_interval_bell">Interval bell</string>
+    <string name="builder_bell_off">Off</string>
+    <string name="builder_bell_min">%1$d min</string>
+    <string name="builder_guided_voice">Guided voice</string>
+    <string name="builder_warmup_title">Warm-up breaths</string>
+    <string name="builder_warmup_sub">3 deep breaths with Sprout first</string>
+    <string name="builder_end_gong">End with a gong</string>
+    <string name="builder_name_hint">Name your session (optional)</string>
+    <string name="builder_save_preset">＋ Save to my sessions</string>
+    <string name="builder_begin">Begin · %1$s</string>
+    <string name="builder_begin_summary">%1$d min · %2$s</string>
+    <string name="builder_begin_summary_layered">%1$d min · %2$s + %3$s</string>
+
+    <!-- Builder option labels (keys live in BuilderConstants) -->
+    <string name="intent_focus">🎯 Focus</string>
+    <string name="intent_unwind">🍃 Unwind</string>
+    <string name="intent_sleep">😴 Sleep</string>
+    <string name="intent_anxiety">🫧 Ease anxiety</string>
+    <string name="intent_energy">⚡ Energy</string>
+    <string name="sound_rain">Rain</string>
+    <string name="sound_ocean">Ocean</string>
+    <string name="sound_forest">Forest</string>
+    <string name="sound_fire">Fireplace</string>
+    <string name="sound_chimes">Chimes</string>
+    <string name="sound_silence">Silence</string>
+    <string name="pace_slow">Slow</string>
+    <string name="pace_medium">Medium</string>
+    <string name="pace_quick">Quick</string>
+    <string name="remind_off">Off</string>
+    <string name="remind_morning">Morning</string>
+    <string name="remind_midday">Midday</string>
+    <string name="remind_evening">Evening</string>
+</resources>

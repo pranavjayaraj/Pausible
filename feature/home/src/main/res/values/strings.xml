@@ -1,63 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Home -->
-    <string name="afk_settings">Settings</string>
-    <string name="afk_reset">Reset</string>
-    <string name="afk_close_your_eyes">close your eyes</string>
-    <string name="afk_bubble_sub">%1$d min · sit</string>
-    <plurals name="afk_reset_content_description">
-        <item quantity="one">Reset. Close your eyes and sit for %1$d minute.</item>
-        <item quantity="other">Reset. Close your eyes and sit for %1$d minutes.</item>
-    </plurals>
-    <string name="afk_minutes_unit">min</string>
+    <string name="home_fact">💡 %1$s</string>
+    <string name="home_explore_more">EXPLORE MORE</string>
+    <string name="home_meditate_title">Meditate</string>
+    <string name="home_meditate_tag">PRESET INTERVAL</string>
+    <string name="home_meditate_prompt">Find your Zen</string>
+    <string name="home_meditate_content_description">Meditate. Start a %1$d minute session.</string>
+    <string name="home_deep_breathing">DEEP BREATHING</string>
+    <string name="home_custom">Custom</string>
+    <string name="home_mindful_tip">MINDFUL TIP</string>
+    <string name="home_tip_body">Sprout says: unclench your jaw and drop your shoulders. There — you just meditated a little.</string>
 
-    <!-- Words that orbit the reset bubble, then spiral away when a sit begins. -->
-    <string-array name="afk_reset_words">
-        <item>stress</item>
-        <item>anxiety</item>
-        <item>fatigue</item>
-        <item>depression</item>
+    <!-- Celebration banner -->
+    <string name="home_celebrate_title">Nice breather! 🎉</string>
+    <string name="home_celebrate_message">+1 break · %1$d-day streak safe</string>
+
+    <!-- Break fact of the day (rotated by day of month; size must match FACT_COUNT). -->
+    <string-array name="home_break_facts">
+        <item>A 5-minute break every hour can boost focus more than powering through.</item>
+        <item>Looking away from screens every 20 minutes eases eye strain.</item>
+        <item>Short walks after sitting boost circulation and mood.</item>
+        <item>Micro-breaks reduce mental fatigue faster than one long break.</item>
+        <item>Deep breathing for 60 seconds can lower your heart rate.</item>
+        <item>Stretching for 2 minutes releases tension built up from sitting.</item>
+        <item>Stepping outside for daylight helps reset your internal clock.</item>
+        <item>A brief pause between tasks improves memory retention.</item>
+        <item>Hydrating during breaks supports concentration afterward.</item>
+        <item>Even 90 seconds of stillness can lower stress hormones.</item>
     </string-array>
-    <plurals name="afk_select_duration_content_description">
-        <item quantity="one">Sit for %1$d minute</item>
-        <item quantity="other">Sit for %1$d minutes</item>
-    </plurals>
-
-    <!-- Footer / stats -->
-    <string name="afk_footer_first_sit">your first sit</string>
-    <string name="afk_footer_stats">%1$s · %2$d-day streak</string>
-    <plurals name="afk_sits_count">
-        <item quantity="one">%d sit</item>
-        <item quantity="other">%d sits</item>
-    </plurals>
 
     <!-- Error -->
-    <string name="afk_error_title">Something interrupted your calm.</string>
-    <string name="afk_retry">Try again</string>
-
-    <!-- Shared navigation affordance (meditation back button). -->
-    <string name="afk_back">Back</string>
-
-    <!-- Meditation session -->
-    <string name="afk_meditation_title">Reset</string>
-    <string name="afk_meditation_breathe">breathe</string>
-    <string name="afk_meditation_hint">Close your eyes. We\'ll chime when it\'s time.</string>
-    <string name="afk_meditation_finish">Finish</string>
-    <string name="afk_meditation_countdown_content_description">%1$s remaining</string>
-
-    <!-- Science-of-closing-your-eyes quotes shown on Home. The two arrays are parallel. -->
-    <string-array name="afk_eye_fact_texts">
-        <item>Close your eyes and the brain slips into alpha rhythm — the 8–12 Hz wave of calm, wakeful rest.</item>
-        <item>Nearly a third of your cortex is devoted to vision. Shut your eyes and you hand that capacity back.</item>
-        <item>Eyes closed, the default mode network takes over — where the mind wanders, reflects, and consolidates.</item>
-        <item>A brief eyes-closed pause lowers cortical arousal, slows the breath, and settles the heart rate.</item>
-        <item>Just 60 seconds with eyes shut measurably reduces visual fatigue and mental load.</item>
-    </string-array>
-    <string-array name="afk_eye_fact_sources">
-        <item>Berger · first human EEG, 1929</item>
-        <item>visual neuroscience</item>
-        <item>Raichle · default mode network</item>
-        <item>psychophysiology</item>
-        <item>attention restoration research</item>
-    </string-array>
+    <string name="home_error_title">Something interrupted your calm.</string>
+    <string name="home_retry">Try again</string>
 </resources>

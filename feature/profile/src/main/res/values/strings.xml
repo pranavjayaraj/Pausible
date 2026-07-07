@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="profile_title">Weekly Progress</string>
+    <string name="profile_subtitle">Here is a summary of your mindful productivity.</string>
+
+    <string name="profile_breaks_label">🌿 BREAKS TAKEN</string>
+    <string name="profile_chip_stretch">Stretch</string>
+    <string name="profile_chip_hydrate">Hydrate</string>
+
+    <string name="profile_streak_label">🔥 DAILY STREAK</string>
+    <string name="profile_streak_days">Days</string>
+    <string name="profile_streak_hint">Keep the momentum going!</string>
+
+    <string name="profile_chart_title">Focus Hours per Day</string>
+    <!-- Monday-first, matching WeeklyFocus.minutesPerDay. -->
+    <string-array name="profile_day_initials">
+        <item>M</item>
+        <item>T</item>
+        <item>W</item>
+        <item>T</item>
+        <item>F</item>
+        <item>S</item>
+        <item>S</item>
+    </string-array>
+</resources>

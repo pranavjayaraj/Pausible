@@ -6,4 +6,23 @@
     <string name="tab_home">Home</string>
     <string name="tab_sessions">Sessions</string>
     <string name="tab_profile">Profile</string>
+
+    <!-- Onboarding: brand splash -->
+    <string name="onboarding_splash_title">Pausible</string>
+    <string name="onboarding_splash_tagline">Help your mind flourish</string>
+
+    <!-- Onboarding: sign in -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_welcome_title">Welcome to your mindful journey.</string>
+    <string name="onboarding_welcome_subtitle">Find your rhythm with small moments of pause.</string>
+    <string name="onboarding_sign_in_apple">Sign in with Apple</string>
+    <string name="onboarding_sign_in_google">Sign in with Google</string>
+    <string name="onboarding_google_glyph">G</string>
+    <string name="onboarding_or_email">OR USE EMAIL</string>
+    <string name="onboarding_sign_in_email">Sign in with email</string>
+    <string name="onboarding_legal_prefix">"By continuing, you agree to our "</string>
+    <string name="onboarding_legal_terms">Terms of Service</string>
+    <string name="onboarding_legal_and">" and "</string>
+    <string name="onboarding_legal_privacy">Privacy Policy</string>
+    <string name="onboarding_legal_suffix">.</string>
 </resources>

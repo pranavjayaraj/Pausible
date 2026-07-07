@@ -1,50 +1,25 @@
 package com.reset.feature.home.ui
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.reset.core.compose.LifecycleAwareLaunchedEffect
-import com.reset.model.domain.SoundController
 import com.reset.feature.home.HomeStatus
-import com.reset.feature.home.HomeStep
 import com.reset.feature.home.HomeViewModel
-import com.reset.feature.home.navigation.HomeIntent
-import com.reset.feature.home.navigation.HomeSideEffect
 
 /**
- * Composable entry point for the Home feature, placed into the app's NavHost. Home↔Session
- * is an intra-feature state transition (rendered from [HomeStep]); cross-feature navigation
- * and app-exit go through the ViewModel's injected [com.reset.navigation.Navigator]. The
- * chime is the feature's only one-shot effect, played via the injected [soundController].
+ * Composable entry point for the Home feature, placed into the app's NavHost.
+ * Cross-feature navigation (the session experience, tab changes, app-exit, builder)
+ * goes through the ViewModel's injected [com.reset.navigation.Navigator].
  */
 @Composable
-fun HomeRoute(soundController: SoundController) {
+fun HomeRoute() {
     val viewModel: HomeViewModel = hiltViewModel()
     val state by viewModel.stateFlow().collectAsStateWithLifecycle()
 
-    LifecycleAwareLaunchedEffect(viewModel.sideFlow()) { effect ->
-        when (effect) {
-            is HomeSideEffect.PlayChime -> soundController.playChime(effect.kind)
-        }
-    }
-
-    BackHandler { viewModel.handleHomeIntent(HomeIntent.HandleBackPress) }
-
     when (state.status) {
-        // The bare AppBackground gradient is the loading state: it matches the splash and
-        // the theme's windowBackground, so the brief DataStore load reads as one surface.
         HomeStatus.Loading -> Unit
-        is HomeStatus.Error -> ErrorScreen(onRetry = { viewModel.handleHomeIntent(HomeIntent.Retry) })
-        HomeStatus.Content -> when (state.screen) {
-            HomeStep.Home -> HomeScreen(state = state, onIntent = viewModel::handleHomeIntent)
-            HomeStep.Session -> MeditationScreen(
-                durationMin = state.durationMin,
-                remainingSeconds = state.remainingSeconds,
-                onBack = { viewModel.handleHomeIntent(HomeIntent.HandleBackPress) },
-                onFinish = { viewModel.handleHomeIntent(HomeIntent.FinishSession) },
-            )
-        }
+        is HomeStatus.Error -> ErrorScreen(onRetry = { viewModel.handleHomeIntent(com.reset.feature.home.navigation.HomeIntent.Retry) })
+        HomeStatus.Content -> HomeScreen(state = state, onIntent = viewModel::handleHomeIntent)
     }
 }

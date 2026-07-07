@@ -1,52 +1,23 @@
 package com.reset.feature.home
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.unit.dp
 
-/** All timing, animation, and string resource constants for the AFK feature live here. */
+/** All timing, dimension, and analytics constants for the Home feature. */
 object HomeConstants {
 
-    /** Duration of the bubble fling-away animation before advancing to the session. */
-    const val LEAVE_ANIMATION_MS = 860L
+    // ── Timing ────────────────────────────────────────────────
+    /** How long the "Nice breather!" banner stays up. */
+    const val CELEBRATION_VISIBLE_MS = 3_200L
 
-    /** Interval between meditation countdown ticks. */
-    const val SESSION_TICK_MS = 1_000L
+    /** Number of entries in the `home_break_facts` string array. */
+    const val FACT_COUNT = 10
 
-    /** Formats a seconds count as `m:ss` for the meditation countdown. */
-    fun formatMmSs(totalSeconds: Int): String {
-        val safe = totalSeconds.coerceAtLeast(0)
-        return "${safe / 60}:${(safe % 60).toString().padStart(2, '0')}"
-    }
-
-    /** List of facts shown on the eye quotes card. */
-    val factTexts: Array<String>
-        @Composable
-        get() {
-            val res = stringArrayResource(R.array.afk_eye_fact_texts)
-            return remember { res }
-        }
-
-    /** Sources matching the facts array. */
-    val factSources: Array<String>
-        @Composable
-        get() {
-            val res = stringArrayResource(R.array.afk_eye_fact_sources)
-            return remember { res }
-        }
-
-    /** Words that orbit the reset bubble. */
-    val resetWords: List<String>
-        @Composable
-        get() {
-            val res = stringArrayResource(R.array.afk_reset_words)
-            return remember { res.toList() }
-        }
-
-    /** Coerced index of the current fact to show. */
-    @Composable
-    fun getFactIndex(state: HomeState): Int {
-        val texts = factTexts
-        return remember(state.fact.index) { state.fact.index.coerceIn(0, texts.lastIndex) }
-    }
+    // ── Dimens ────────────────────────────────────────────────
+    val sectionSpacing = 22.dp
+    val cardSpacing = 14.dp
+    val gridSpacing = 10.dp
+    val heroIconSize = 44.dp
+    val heroMascotSize = 30.dp
+    val tipMascotSize = 34.dp
+    val bannerMascotSize = 46.dp
 }

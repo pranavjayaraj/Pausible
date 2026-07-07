@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.reset.androidLibrary)
     alias(libs.plugins.reset.hilt)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -10,6 +11,8 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(libs.coroutines.core)
+    // Builder presets are persisted as a JSON blob inside DataStore preferences.
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime)
 
