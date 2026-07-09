@@ -2,9 +2,7 @@ package com.reset.feature.sessions
 
 import androidx.lifecycle.SavedStateHandle
 import com.reset.core.mvi.BaseViewModel
-import com.reset.feature.home.api.HomeDestination
 import com.reset.feature.sessions.api.SessionDestination
-import com.reset.feature.sessions.api.SessionsDestination
 import com.reset.feature.sessions.navigation.SessionIntent
 import com.reset.feature.sessions.navigation.SessionSideEffect
 import com.reset.model.domain.CelebrationEvent
@@ -112,7 +110,7 @@ class SessionViewModel @Inject constructor(
     }
 
     /** A finished (or cut-short) breathing step: a warm-up flows into focus; a break is
-     *  recorded, celebrated on Home, and returns there. */
+     *  recorded, celebrated, and pops back to whichever screen launched the session. */
     private fun finishBreathing() = intent {
         if (state.step != SessionStep.Breathing) return@intent
         if (state.breathing.isWarmup) {
@@ -121,7 +119,7 @@ class SessionViewModel @Inject constructor(
             postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
             repository.recordBreak()
             celebrationStore.dispatch(CelebrationEvent.BreakFinished)
-            navigator.switchTab(HomeDestination)
+            navigator.pop()
         }
     }
 
@@ -178,14 +176,14 @@ class SessionViewModel @Inject constructor(
         completeFocus()
     }
 
-    /** Records the sit and hands over to the break-suggestion tab, per the design flow. */
+    /** Records the sit and pops back to whichever screen launched the session. */
     private suspend fun SimpleSyntax<SessionState, SessionSideEffect>.completeFocus() {
         val focus = state.focus
         val elapsedMin =
             (focus.totalSeconds - focus.remainingSeconds) / SessionConstants.SECONDS_PER_MINUTE
         if (state.gong) postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
         if (elapsedMin > 0) repository.recordFocusSession(elapsedMin)
-        navigator.switchTab(SessionsDestination)
+        navigator.pop()
     }
 
     /** System back abandons the experience without recording anything. */
