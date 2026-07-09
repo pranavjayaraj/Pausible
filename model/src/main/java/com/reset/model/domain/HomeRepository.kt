@@ -38,6 +38,9 @@ interface HomeRepository {
     /** Records a completed mindful break and keeps the daily streak alive. */
     suspend fun recordBreak()
 
+    /** Logs the mood the user reported after a session, on a 0–100 scale. */
+    suspend fun recordMood(level: Int)
+
     /** Saves (or replaces, by name) a builder preset, keeping the most recent
      *  [SessionPreset.MAX_PRESETS]. */
     suspend fun savePreset(preset: SessionPreset)

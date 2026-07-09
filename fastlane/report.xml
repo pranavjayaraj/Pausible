@@ -5,17 +5,17 @@
     
     
       
-      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000242">
+      <testcase classname="fastlane.lanes" name="0: default_platform" time="0.000305">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="1: installDebug" time="31.446997">
+      <testcase classname="fastlane.lanes" name="1: installDebug" time="47.068175">
         
       </testcase>
     
       
-      <testcase classname="fastlane.lanes" name="2: adb shell am start -n com.reset.app/.MainActivity" time="2.347361">
+      <testcase classname="fastlane.lanes" name="2: adb shell am start -n com.reset.app/.MainActivity" time="0.439248">
         
       </testcase>
     

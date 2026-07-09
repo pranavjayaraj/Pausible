@@ -39,5 +39,7 @@ class FakeHomeRepository(
 
     override suspend fun recordBreak() = Unit
 
+    override suspend fun recordMood(level: Int) = Unit
+
     override suspend fun savePreset(preset: SessionPreset) = Unit
 }

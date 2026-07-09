@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mood_title">How are you feeling?</string>
+    <string name="mood_subtitle">Log your mood after that session.</string>
+
+    <!-- Slider anchors, low → high. -->
+    <string name="mood_scale_rough">Rough</string>
+    <string name="mood_scale_okay">Okay</string>
+    <string name="mood_scale_great">Great</string>
+
+    <string name="mood_save">Save Mood</string>
+    <string name="mood_skip">Skip for now</string>
+
+    <string name="mood_close_content_description">Close mood log</string>
+    <string name="mood_slider_content_description">Mood level</string>
+</resources>

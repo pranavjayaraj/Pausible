@@ -26,6 +26,8 @@ dependencies {
     implementation(project(":feature:sessions:api"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:profile:api"))
+    implementation(project(":feature:mood"))
+    implementation(project(":feature:mood:api"))
     implementation(project(":model"))
     implementation(project(":repository"))
     // The app host owns the real navigation graph (NavHost) and drives ObserveNavigation,

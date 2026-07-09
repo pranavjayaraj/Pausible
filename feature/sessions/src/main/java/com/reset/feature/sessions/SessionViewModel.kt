@@ -2,6 +2,7 @@ package com.reset.feature.sessions
 
 import androidx.lifecycle.SavedStateHandle
 import com.reset.core.mvi.BaseViewModel
+import com.reset.feature.mood.api.MoodDestination
 import com.reset.feature.sessions.api.SessionDestination
 import com.reset.feature.sessions.navigation.SessionIntent
 import com.reset.feature.sessions.navigation.SessionSideEffect
@@ -176,7 +177,12 @@ class SessionViewModel @Inject constructor(
         completeFocus()
     }
 
-    /** Records the sit and pops back to whichever screen launched the session. */
+    /**
+     * Records the sit, then swaps the finished session for the Mood Log: [Navigator.pop]
+     * clears the session off the back stack (back to whatever launched it) and the Mood Log
+     * is pushed on top, matching the design's "log your mood after that session" flow. Both
+     * events ride the ordered Navigator channel, so they apply in sequence.
+     */
     private suspend fun SimpleSyntax<SessionState, SessionSideEffect>.completeFocus() {
         val focus = state.focus
         val elapsedMin =
@@ -184,6 +190,7 @@ class SessionViewModel @Inject constructor(
         if (state.gong) postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
         if (elapsedMin > 0) repository.recordFocusSession(elapsedMin)
         navigator.pop()
+        navigator.navigate(MoodDestination)
     }
 
     /** System back abandons the experience without recording anything. */

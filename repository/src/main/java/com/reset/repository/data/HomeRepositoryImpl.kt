@@ -106,6 +106,15 @@ class HomeRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun recordMood(level: Int) {
+        val today = timeProvider.todayEpochDay()
+        dataStore.edit { prefs ->
+            prefs[KEY_LAST_MOOD] = level.coerceIn(MOOD_MIN, MOOD_MAX)
+            prefs[KEY_LAST_MOOD_DAY] = today
+            prefs[KEY_MOODS_LOGGED] = (prefs[KEY_MOODS_LOGGED] ?: 0) + 1
+        }
+    }
+
     override suspend fun savePreset(preset: SessionPreset) {
         dataStore.edit { prefs ->
             val updated = decodePresets(prefs[KEY_PRESETS])
@@ -141,6 +150,10 @@ class HomeRepositoryImpl @Inject constructor(
     private companion object {
         const val NO_DAY = -1L
 
+        /** The mood slider's inclusive bounds; writes are clamped to this range. */
+        const val MOOD_MIN = 0
+        const val MOOD_MAX = 100
+
         val KEY_DURATION = intPreferencesKey("duration_min")
         val KEY_REMINDERS_ENABLED = booleanPreferencesKey("reminders_enabled")
         val KEY_REMINDER_EVERY = intPreferencesKey("reminder_every_min")
@@ -152,6 +165,9 @@ class HomeRepositoryImpl @Inject constructor(
         val KEY_BREAKS = intPreferencesKey("breaks_taken")
         val KEY_LAST_ACTIVE_DAY = longPreferencesKey("last_active_epoch_day")
         val KEY_PRESETS = stringPreferencesKey("builder_presets")
+        val KEY_LAST_MOOD = intPreferencesKey("last_mood_level")
+        val KEY_LAST_MOOD_DAY = longPreferencesKey("last_mood_epoch_day")
+        val KEY_MOODS_LOGGED = intPreferencesKey("moods_logged")
 
         fun keyBucketMin(dayIndex: Int) = intPreferencesKey("focus_min_day_$dayIndex")
         fun keyBucketDay(dayIndex: Int) = longPreferencesKey("focus_epoch_day_$dayIndex")

@@ -1,4 +1,4 @@
-package com.reset.feature.sessions
+package com.reset.feature.mood
 
 import com.reset.model.domain.HomeRepository
 import com.reset.model.domain.model.HomePreferences
@@ -8,19 +8,15 @@ import com.reset.model.domain.model.WeeklyFocus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/** In-memory [HomeRepository] for session ViewModel tests. */
+/** In-memory [HomeRepository] for Mood ViewModel tests. */
 class FakeHomeRepository : HomeRepository {
 
-    val statsFlow = MutableStateFlow(SessionStats())
-
-    /** Minutes handed to [recordFocusSession], in call order. */
-    val recordedFocusMinutes = mutableListOf<Int>()
-    var recordedBreaks = 0
-        private set
+    /** Levels handed to [recordMood], in call order. */
+    val recordedMoods = mutableListOf<Int>()
 
     override val preferences: Flow<HomePreferences> = MutableStateFlow(HomePreferences())
 
-    override val stats: Flow<SessionStats> = statsFlow
+    override val stats: Flow<SessionStats> = MutableStateFlow(SessionStats())
 
     override val weeklyFocus: Flow<WeeklyFocus> = MutableStateFlow(WeeklyFocus())
 
@@ -36,16 +32,9 @@ class FakeHomeRepository : HomeRepository {
 
     override suspend fun setReminderEndHour(hour: Int) = Unit
 
-    override suspend fun recordFocusSession(minutes: Int) {
-        recordedFocusMinutes += minutes
-    }
+    override suspend fun recordFocusSession(minutes: Int) = Unit
 
-    override suspend fun recordBreak() {
-        recordedBreaks += 1
-    }
-
-    /** Mood levels handed to [recordMood], in call order. */
-    val recordedMoods = mutableListOf<Int>()
+    override suspend fun recordBreak() = Unit
 
     override suspend fun recordMood(level: Int) {
         recordedMoods += level
