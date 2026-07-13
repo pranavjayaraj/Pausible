@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.reset.core.mvi.BaseViewModel
 import com.reset.feature.mood.navigation.MoodIntent
 import com.reset.feature.mood.navigation.MoodSideEffect
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.mood.MoodRepository
 import com.reset.model.domain.model.ChimeKind
 import com.reset.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MoodViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: HomeRepository,
+    private val moodRepository: MoodRepository,
     private val navigator: Navigator,
 ) : BaseViewModel<MoodState, MoodSideEffect>(savedStateHandle) {
 
@@ -36,7 +36,7 @@ class MoodViewModel @Inject constructor(
 
     /** Persists the reported mood, chimes, then pops back to whatever launched the log. */
     private fun saveMood() = intent {
-        repository.recordMood(state.level)
+        moodRepository.recordMood(state.level)
         postSideEffect(MoodSideEffect.PlayChime(ChimeKind.End))
         navigator.pop()
     }

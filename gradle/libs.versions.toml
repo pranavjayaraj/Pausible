@@ -14,6 +14,7 @@ kotlinxSerialization = "1.7.3"
 lifecycleRuntimeCompose = "2.8.7"
 datastore = "1.1.1"
 workManager = "2.9.1"
+room = "2.6.1"
 compileSdk = "34"
 targetSdk = "34"
 minSdk = "21"
@@ -45,10 +46,15 @@ androidx-navigation-compose       = { module = "androidx.navigation:navigation-c
 kotlinx-serialization-core        = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 kotlinx-serialization-json        = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 androidx-lifecycle-runtimeCompose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
+androidx-lifecycle-process       = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleRuntimeCompose" }
 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "workManager" }
+
+androidx-room-runtime  = { module = "androidx.room:room-runtime", version.ref = "room" }
+androidx-room-ktx      = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 coroutines-core    = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -60,6 +66,7 @@ coreLibraryDesugaring = "com.android.tools:desugar_jdk_libs:2.0.4"
 
 junit                      = "junit:junit:4.13.2"
 androidx-test-junitExt     = "androidx.test.ext:junit:1.2.1"
+play-services-location     = "com.google.android.gms:play-services-location:21.3.0"
 androidx-test-espressoCore = "androidx.test.espresso:espresso-core:3.6.1"
 
 # Plugin classpaths (consumed by build-logic)

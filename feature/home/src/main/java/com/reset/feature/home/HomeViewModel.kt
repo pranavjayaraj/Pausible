@@ -9,8 +9,9 @@ import com.reset.feature.sessions.api.SessionDestination
 import com.reset.feature.sessions.api.SessionsDestination
 import com.reset.model.domain.CelebrationEvent
 import com.reset.model.domain.CelebrationStore
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.preferences.PreferencesRepository
 import com.reset.model.domain.StartupState
+import com.reset.model.domain.stats.StatsRepository
 import com.reset.model.domain.TimeProvider
 import com.reset.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +26,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: HomeRepository,
+    private val preferencesRepository: PreferencesRepository,
+    private val statsRepository: StatsRepository,
     private val navigator: Navigator,
     private val celebrationStore: CelebrationStore,
     private val startupState: StartupState,
@@ -56,7 +58,7 @@ class HomeViewModel @Inject constructor(
             )
         }
         
-        combine(repository.preferences, repository.stats) { prefs, stats ->
+        combine(preferencesRepository.preferences, statsRepository.stats) { prefs, stats ->
             Pair(prefs, stats)
         }
             .catch { error ->

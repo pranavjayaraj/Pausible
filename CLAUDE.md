@@ -217,6 +217,22 @@ app/
   `dispatcherProvider.IO` — never block the main thread.
 - Pure helpers live in an `object` (e.g. `OnboardingUtils`) as extension functions.
 
+### Repositories (per-domain, never a god interface)
+- Repositories are split **per domain** (preferences, stats, mood, presets, ...), one small
+  interface per domain — never one shared interface that every feature injects.
+- When writing a NEW repository (or adding to one), put it in its domain's folder:
+  - interface → `model/src/main/java/com/reset/model/domain/<domain>/XxxRepository.kt`
+    (package `com.reset.model.domain.<domain>`)
+  - impl → `repository/src/main/java/com/reset/repository/data/<domain>/XxxRepositoryImpl.kt`
+    (package `com.reset.repository.data.<domain>`), holding only that domain's DataStore keys
+    and only the dependencies it needs; bind it in `HomeModule` with `@Binds`
+  - impl test → `repository/src/test/java/com/reset/repository/data/<domain>/`
+- If a method doesn't fit an existing domain, create a new domain folder — do NOT grow a
+  neighboring interface.
+- ViewModels inject only the repository interfaces they actually use; each feature's test
+  fakes implement only those interfaces (e.g. `FakeMoodRepository`), in the feature's own
+  test package.
+
 ### Constants & Analytics
 - Every analytics page/action/event string, status string, and dimen lives in
   `XxxConstants` — **no magic strings** in ViewModel or UI.
@@ -239,6 +255,9 @@ app/
 10. `utils/` — delegates (interface + `@Inject` impl) and pure util objects as needed.
 11. all kinds of api calls will be done in the data module
 12. all kinds of local data models will be created in the domain module
+13. new repositories go in their domain folder on both sides — interface in
+    `model/.../domain/<domain>/`, impl in `repository/.../data/<domain>/` (see
+    "Repositories (per-domain, never a god interface)")
 
 ---
 
@@ -259,6 +278,22 @@ app/
   `Intent`s and calls `startActivity`.
 - ❌ No direct ViewModel access from leaf composables — pass lambdas down.
 - ❌ No blocking / IO work off `DispatcherProvider`.
+
+---
+
+## 6. Sense — the ML microbreak engine
+
+The `sense-*` modules (`:sense-ml`, `:sense-signals`, `:sense-store`,
+`:sense-delivery`) and the `ml/` Python pipeline form the on-device ML system that
+times microbreak notifications. They all live under the `library/` folder
+(`library/sense-*/`, `library/ml/`); the Gradle module names stay flat (`:sense-ml`),
+mapped via `projectDir` in `settings.gradle.kts`. **Before modifying ANY of them, read
+[`docs/SENSE_ML.md`](docs/SENSE_ML.md)** — it documents the architecture, the
+34-feature schema, the cross-language training↔inference contract, the label rules,
+and step-by-step modification checklists (changing a feature REQUIRES a
+`SCHEMA_VERSION` bump in both Python and Kotlin plus a retrain). These modules are
+kept SDK-extractable: plain constructors, Hilt only at entry edges, no imports from
+`app/` or feature modules, and zero Android types inside `:sense-ml`.
 
 ---
 

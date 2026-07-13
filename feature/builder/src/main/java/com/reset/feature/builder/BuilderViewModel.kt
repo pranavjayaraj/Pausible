@@ -5,7 +5,8 @@ import com.reset.core.mvi.BaseViewModel
 import com.reset.feature.builder.navigation.BuilderIntent
 import com.reset.feature.builder.navigation.BuilderSideEffect
 import com.reset.feature.sessions.api.SessionDestination
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.preferences.PreferencesRepository
+import com.reset.model.domain.presets.PresetsRepository
 import com.reset.model.domain.TimeProvider
 import com.reset.model.domain.model.SessionPreset
 import com.reset.navigation.Navigator
@@ -18,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class BuilderViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: HomeRepository,
+    private val preferencesRepository: PreferencesRepository,
+    private val presetsRepository: PresetsRepository,
     private val navigator: Navigator,
     private val timeProvider: TimeProvider,
 ) : BaseViewModel<BuilderState, BuilderSideEffect>(savedStateHandle) {
@@ -27,7 +29,7 @@ class BuilderViewModel @Inject constructor(
 
     override fun initData() {
         intent {
-            repository.presets.collectLatest { presets ->
+            presetsRepository.presets.collectLatest { presets ->
                 reduce { state.copy(presets = presets) }
             }
         }
@@ -72,11 +74,11 @@ class BuilderViewModel @Inject constructor(
 
     private fun selectReminder(key: String) = intent {
         reduce { state.copy(remindKey = key) }
-        repository.setRemindersEnabled(key != BuilderConstants.REMIND_OFF)
+        preferencesRepository.setRemindersEnabled(key != BuilderConstants.REMIND_OFF)
     }
 
     private fun savePreset() = intent {
-        repository.savePreset(state.toPreset())
+        presetsRepository.savePreset(state.toPreset())
     }
 
     private fun applyPreset(name: String) = intent {

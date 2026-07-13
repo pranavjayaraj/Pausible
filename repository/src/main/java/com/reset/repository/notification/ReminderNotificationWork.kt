@@ -8,8 +8,9 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.reset.model.domain.EyeFactProvider
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.preferences.PreferencesRepository
 import com.reset.model.domain.ReminderTimeCalculator
+import com.reset.model.domain.stats.StatsRepository
 import com.reset.model.domain.ReminderTypeSelector
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -63,7 +64,8 @@ class ReminderNotificationWork(
     @EntryPoint
     @InstallIn(SingletonComponent::class)
     interface ReminderNotificationWorkEntryPoint {
-        fun homeRepository(): HomeRepository
+        fun preferencesRepository(): PreferencesRepository
+        fun statsRepository(): StatsRepository
         fun reminderNotificationUtil(): ReminderNotificationUtil
         fun eyeFactProvider(): EyeFactProvider
         fun random(): Random
@@ -71,7 +73,11 @@ class ReminderNotificationWork(
 
     private lateinit var hiltEntryPoint: ReminderNotificationWorkEntryPoint
 
-    private val homeRepository: HomeRepository by lazy { hiltEntryPoint.homeRepository() }
+    private val preferencesRepository: PreferencesRepository by lazy {
+        hiltEntryPoint.preferencesRepository()
+    }
+
+    private val statsRepository: StatsRepository by lazy { hiltEntryPoint.statsRepository() }
 
     private val notificationUtil: ReminderNotificationUtil by lazy {
         hiltEntryPoint.reminderNotificationUtil()
@@ -87,7 +93,7 @@ class ReminderNotificationWork(
             ReminderNotificationWorkEntryPoint::class.java,
         )
 
-        val prefs = homeRepository.preferences.first()
+        val prefs = preferencesRepository.preferences.first()
         // Toggled off after this run was enqueued — end the chain without posting.
         if (!prefs.remindersEnabled) return Result.success()
 
@@ -95,7 +101,7 @@ class ReminderNotificationWork(
         // WorkManager can fire late; only post if we are still inside the user's window.
         if (ReminderTimeCalculator.isWithinWindow(now, prefs.remindersStartHour, prefs.remindersEndHour)) {
             // Variant is picked fresh at fire time — streak from current stats, fact at random.
-            val stats = homeRepository.stats.first()
+            val stats = statsRepository.stats.first()
             val type = ReminderTypeSelector.select(
                 streakDays = stats.streak,
                 fact = eyeFactProvider.random(),

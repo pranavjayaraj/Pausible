@@ -12,16 +12,20 @@ import kotlinx.coroutines.delay
 /** How long the brand splash holds before advancing on its own, like the design. */
 private const val SPLASH_HOLD_MS = 2_800L
 
-/** The onboarding flow's two steps — an intra-route state change, not navigation. */
-private enum class OnboardingStep { Splash, SignIn }
+/** The onboarding flow's steps — an intra-route state change, not navigation. */
+private enum class OnboardingStep { Splash, SignIn, Permissions }
 
 /**
  * App-owned onboarding: the brand splash that auto-advances (or taps through) to the
- * sign-in sheet. There is no real auth yet, so every sign-in choice — Apple, Google,
- * email, Skip, or the close glyph — resolves to [onDone]; the host pops the route away.
+ * sign-in sheet, then the Sense permissions step. There is no real auth yet, so every
+ * sign-in choice — Apple, Google, email, Skip, or the close glyph — advances to
+ * permissions; Continue there resolves to [onDone] and the host pops the route away.
  */
 @Composable
-fun OnboardingRoute(onDone: () -> Unit) {
+fun OnboardingRoute(
+    onDone: () -> Unit,
+    onMotionGranted: () -> Unit = {},
+) {
     var step by rememberSaveable { mutableStateOf(OnboardingStep.Splash) }
 
     LaunchedEffect(step) {
@@ -36,6 +40,12 @@ fun OnboardingRoute(onDone: () -> Unit) {
 
     when (step) {
         OnboardingStep.Splash -> OnboardingSplashScreen(onTap = { step = OnboardingStep.SignIn })
-        OnboardingStep.SignIn -> OnboardingSignInScreen(onSignIn = onDone)
+        OnboardingStep.SignIn -> OnboardingSignInScreen(
+            onSignIn = { step = OnboardingStep.Permissions },
+        )
+        OnboardingStep.Permissions -> SensePermissionsScreen(
+            onContinue = onDone,
+            onMotionGranted = onMotionGranted,
+        )
     }
 }

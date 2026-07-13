@@ -18,7 +18,7 @@ class SessionViewModelTest {
 
     private class Harness(
         args: Map<String, Any?>,
-        val repository: FakeHomeRepository = FakeHomeRepository(),
+        val repository: FakeStatsRepository = FakeStatsRepository(),
         val navigator: FakeNavigator = FakeNavigator(),
         val celebrationStore: FakeCelebrationStore = FakeCelebrationStore(),
     ) {

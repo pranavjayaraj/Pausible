@@ -16,7 +16,7 @@ import org.orbitmvi.orbit.test.test
 class MoodViewModelTest {
 
     private fun viewModel(
-        repository: FakeHomeRepository = FakeHomeRepository(),
+        repository: FakeMoodRepository = FakeMoodRepository(),
         navigator: FakeNavigator = FakeNavigator(),
     ) = MoodViewModel(SavedStateHandle(), repository, navigator)
 
@@ -63,7 +63,7 @@ class MoodViewModelTest {
 
     @Test
     fun `saving records the mood, chimes and pops back`() = runTest {
-        val repo = FakeHomeRepository()
+        val repo = FakeMoodRepository()
         val navigator = FakeNavigator()
 
         viewModel(repo, navigator).test(this) {
@@ -84,7 +84,7 @@ class MoodViewModelTest {
 
     @Test
     fun `dismissing pops back without recording a mood`() = runTest {
-        val repo = FakeHomeRepository()
+        val repo = FakeMoodRepository()
         val navigator = FakeNavigator()
 
         viewModel(repo, navigator).test(this) {

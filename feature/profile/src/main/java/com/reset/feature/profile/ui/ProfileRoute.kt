@@ -20,5 +20,13 @@ fun ProfileRoute() {
 
     BackHandler { viewModel.handleProfileIntent(ProfileIntent.HandleBackPress) }
 
-    ProfileScreen(state = state)
+    ProfileScreen(
+        state = state,
+        onAdjustQuietHoursStart = { delta ->
+            viewModel.handleProfileIntent(ProfileIntent.AdjustQuietHoursStart(delta))
+        },
+        onAdjustQuietHoursEnd = { delta ->
+            viewModel.handleProfileIntent(ProfileIntent.AdjustQuietHoursEnd(delta))
+        },
+    )
 }

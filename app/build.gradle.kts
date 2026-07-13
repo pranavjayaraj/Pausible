@@ -30,6 +30,11 @@ dependencies {
     implementation(project(":feature:mood:api"))
     implementation(project(":model"))
     implementation(project(":repository"))
+    // Sense: context-aware microbreak engine (tick scheduling, prompt deep-link
+    // handling, completion reporting back into the decision log).
+    implementation(project(":sense-delivery"))
+    implementation(project(":sense-signals"))
+    implementation(project(":sense-store"))
     // The app host owns the real navigation graph (NavHost) and drives ObserveNavigation,
     // so it depends on navigation-compose directly rather than inheriting it from :navigation.
     implementation(libs.androidx.navigation.compose)

@@ -8,7 +8,7 @@ import com.reset.feature.sessions.navigation.SessionIntent
 import com.reset.feature.sessions.navigation.SessionSideEffect
 import com.reset.model.domain.CelebrationEvent
 import com.reset.model.domain.CelebrationStore
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.stats.StatsRepository
 import com.reset.model.domain.model.ChimeKind
 import com.reset.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SessionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: HomeRepository,
+    private val statsRepository: StatsRepository,
     private val navigator: Navigator,
     private val celebrationStore: CelebrationStore,
 ) : BaseViewModel<SessionState, SessionSideEffect>(savedStateHandle) {
@@ -118,7 +118,7 @@ class SessionViewModel @Inject constructor(
             enterFocus()
         } else {
             postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
-            repository.recordBreak()
+            statsRepository.recordBreak()
             celebrationStore.dispatch(CelebrationEvent.BreakFinished)
             navigator.pop()
         }
@@ -188,7 +188,7 @@ class SessionViewModel @Inject constructor(
         val elapsedMin =
             (focus.totalSeconds - focus.remainingSeconds) / SessionConstants.SECONDS_PER_MINUTE
         if (state.gong) postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
-        if (elapsedMin > 0) repository.recordFocusSession(elapsedMin)
+        if (elapsedMin > 0) statsRepository.recordFocusSession(elapsedMin)
         navigator.pop()
         navigator.navigate(MoodDestination)
     }
