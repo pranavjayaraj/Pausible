@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":feature:sessions:api"))
     // Cross-feature navigation targets only the destination contract, never the feature impl.
     implementation(project(":feature:home:api"))
+    implementation(project(":feature:mood:api"))
     implementation(libs.coroutines.core)
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.androidx.compose.activity)

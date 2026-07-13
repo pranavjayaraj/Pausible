@@ -7,6 +7,11 @@ data class HomePreferences(
     val remindersEveryMin: Int = DEFAULT_REMINDER_EVERY_MIN,
     val remindersStartHour: Int = DEFAULT_REMINDER_START_HOUR,
     val remindersEndHour: Int = DEFAULT_REMINDER_END_HOUR,
+    /** Sense quiet hours — the engine never prompts (wind-down excepted) inside
+     *  [quietHoursStartHour, quietHoursEndHour); wraps midnight. Distinct from
+     *  the reminder window above, which is when the reminder chain fires. */
+    val quietHoursStartHour: Int = DEFAULT_QUIET_HOURS_START,
+    val quietHoursEndHour: Int = DEFAULT_QUIET_HOURS_END,
 ) {
     companion object {
         /** The Meditate hero card's preset interval, per the design. */
@@ -15,6 +20,9 @@ data class HomePreferences(
         const val DEFAULT_REMINDER_EVERY_MIN = 60
         const val DEFAULT_REMINDER_START_HOUR = 9
         const val DEFAULT_REMINDER_END_HOUR = 18
+
+        const val DEFAULT_QUIET_HOURS_START = 22
+        const val DEFAULT_QUIET_HOURS_END = 7
 
         /** Reminder cadences offered by the Settings frequency grid, in minutes.
          *  2 min is a temporary testing cadence — remove before release. */

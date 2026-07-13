@@ -25,4 +25,18 @@
     <string name="onboarding_legal_and">" and "</string>
     <string name="onboarding_legal_privacy">Privacy Policy</string>
     <string name="onboarding_legal_suffix">.</string>
+
+    <!-- Onboarding: Sense permissions -->
+    <string name="sense_perms_title">Well-timed pauses</string>
+    <string name="sense_perms_subtitle">Pausible learns your rhythm on this device — nothing ever leaves your phone.</string>
+    <string name="sense_perms_notifications_title">Notifications</string>
+    <string name="sense_perms_notifications_why">The gentle nudge itself — max 3 a day, never while driving.</string>
+    <string name="sense_perms_usage_title">Screen-time access</string>
+    <string name="sense_perms_usage_why">Spots long focus stretches and app-switching fatigue. Only categories, never content.</string>
+    <string name="sense_perms_motion_title">Motion</string>
+    <string name="sense_perms_motion_why">Stays silent while you\'re walking or driving.</string>
+    <string name="sense_perms_allow">Allow</string>
+    <string name="sense_perms_granted">On</string>
+    <string name="sense_perms_continue">Continue</string>
+    <string name="sense_perms_footnote">Everything is optional — you can change these anytime in Settings.</string>
 </resources>

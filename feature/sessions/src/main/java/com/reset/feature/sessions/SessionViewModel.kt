@@ -2,14 +2,13 @@ package com.reset.feature.sessions
 
 import androidx.lifecycle.SavedStateHandle
 import com.reset.core.mvi.BaseViewModel
-import com.reset.feature.home.api.HomeDestination
+import com.reset.feature.mood.api.MoodDestination
 import com.reset.feature.sessions.api.SessionDestination
-import com.reset.feature.sessions.api.SessionsDestination
 import com.reset.feature.sessions.navigation.SessionIntent
 import com.reset.feature.sessions.navigation.SessionSideEffect
 import com.reset.model.domain.CelebrationEvent
 import com.reset.model.domain.CelebrationStore
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.stats.StatsRepository
 import com.reset.model.domain.model.ChimeKind
 import com.reset.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +22,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SessionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: HomeRepository,
+    private val statsRepository: StatsRepository,
     private val navigator: Navigator,
     private val celebrationStore: CelebrationStore,
 ) : BaseViewModel<SessionState, SessionSideEffect>(savedStateHandle) {
@@ -112,16 +111,16 @@ class SessionViewModel @Inject constructor(
     }
 
     /** A finished (or cut-short) breathing step: a warm-up flows into focus; a break is
-     *  recorded, celebrated on Home, and returns there. */
+     *  recorded, celebrated, and pops back to whichever screen launched the session. */
     private fun finishBreathing() = intent {
         if (state.step != SessionStep.Breathing) return@intent
         if (state.breathing.isWarmup) {
             enterFocus()
         } else {
             postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
-            repository.recordBreak()
+            statsRepository.recordBreak()
             celebrationStore.dispatch(CelebrationEvent.BreakFinished)
-            navigator.switchTab(HomeDestination)
+            navigator.pop()
         }
     }
 
@@ -178,14 +177,20 @@ class SessionViewModel @Inject constructor(
         completeFocus()
     }
 
-    /** Records the sit and hands over to the break-suggestion tab, per the design flow. */
+    /**
+     * Records the sit, then swaps the finished session for the Mood Log: [Navigator.pop]
+     * clears the session off the back stack (back to whatever launched it) and the Mood Log
+     * is pushed on top, matching the design's "log your mood after that session" flow. Both
+     * events ride the ordered Navigator channel, so they apply in sequence.
+     */
     private suspend fun SimpleSyntax<SessionState, SessionSideEffect>.completeFocus() {
         val focus = state.focus
         val elapsedMin =
             (focus.totalSeconds - focus.remainingSeconds) / SessionConstants.SECONDS_PER_MINUTE
         if (state.gong) postSideEffect(SessionSideEffect.PlayChime(ChimeKind.End))
-        if (elapsedMin > 0) repository.recordFocusSession(elapsedMin)
-        navigator.switchTab(SessionsDestination)
+        if (elapsedMin > 0) statsRepository.recordFocusSession(elapsedMin)
+        navigator.pop()
+        navigator.navigate(MoodDestination)
     }
 
     /** System back abandons the experience without recording anything. */

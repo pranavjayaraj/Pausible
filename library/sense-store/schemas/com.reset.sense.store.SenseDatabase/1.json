@@ -1,0 +1,131 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "1f57bc4a9deeb9a8dd190b43fc68deaf",
+    "entities": [
+      {
+        "tableName": "decision_log",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `timestampMs` INTEGER NOT NULL, `hourOfDay` INTEGER NOT NULL, `action` TEXT NOT NULL, `breakType` TEXT NOT NULL, `blendedScore` REAL NOT NULL, `ruleScore` REAL NOT NULL, `modelScore` REAL, `modelAlpha` REAL NOT NULL, `gateReason` TEXT, `featuresCsv` TEXT, `outcome` TEXT NOT NULL, `outcomeAtMs` INTEGER, `responseDelaySec` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timestampMs",
+            "columnName": "timestampMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hourOfDay",
+            "columnName": "hourOfDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "action",
+            "columnName": "action",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "breakType",
+            "columnName": "breakType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "blendedScore",
+            "columnName": "blendedScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ruleScore",
+            "columnName": "ruleScore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modelScore",
+            "columnName": "modelScore",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "modelAlpha",
+            "columnName": "modelAlpha",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gateReason",
+            "columnName": "gateReason",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "featuresCsv",
+            "columnName": "featuresCsv",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "outcome",
+            "columnName": "outcome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "outcomeAtMs",
+            "columnName": "outcomeAtMs",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "responseDelaySec",
+            "columnName": "responseDelaySec",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_decision_log_timestampMs",
+            "unique": false,
+            "columnNames": [
+              "timestampMs"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_decision_log_timestampMs` ON `${TABLE_NAME}` (`timestampMs`)"
+          },
+          {
+            "name": "index_decision_log_outcome",
+            "unique": false,
+            "columnNames": [
+              "outcome"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_decision_log_outcome` ON `${TABLE_NAME}` (`outcome`)"
+          }
+        ],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1f57bc4a9deeb9a8dd190b43fc68deaf')"
+    ]
+  }
+}

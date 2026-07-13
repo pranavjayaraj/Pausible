@@ -1,9 +1,7 @@
 package com.reset.feature.sessions
 
 import androidx.lifecycle.SavedStateHandle
-import com.reset.feature.home.api.HomeDestination
 import com.reset.feature.sessions.api.SessionDestination
-import com.reset.feature.sessions.api.SessionsDestination
 import com.reset.feature.sessions.navigation.SessionIntent
 import com.reset.feature.sessions.navigation.SessionSideEffect
 import com.reset.model.domain.CelebrationEvent
@@ -20,7 +18,7 @@ class SessionViewModelTest {
 
     private class Harness(
         args: Map<String, Any?>,
-        val repository: FakeHomeRepository = FakeHomeRepository(),
+        val repository: FakeStatsRepository = FakeStatsRepository(),
         val navigator: FakeNavigator = FakeNavigator(),
         val celebrationStore: FakeCelebrationStore = FakeCelebrationStore(),
     ) {
@@ -52,7 +50,7 @@ class SessionViewModelTest {
     )
 
     @Test
-    fun `a break runs the breathing clock then records, celebrates and lands on home`() = runTest {
+    fun `a break runs the breathing clock then records, celebrates and pops back`() = runTest {
         val harness = Harness(
             args(mode = SessionDestination.MODE_BREAK, breakKind = SessionDestination.KIND_BREATHING),
         )
@@ -66,7 +64,7 @@ class SessionViewModelTest {
 
             // The clock spends its tick budget (virtual time), then the break completes.
             assertEquals(
-                NavEvent.SwitchTab(HomeDestination),
+                NavEvent.Pop,
                 harness.navigator.events.first(),
             )
             assertEquals(SessionSideEffect.PlayChime(ChimeKind.End), awaitNextSideEffect())
@@ -104,7 +102,7 @@ class SessionViewModelTest {
     }
 
     @Test
-    fun `a finished focus session is recorded and hands over to the break tab`() = runTest {
+    fun `a finished focus session is recorded and pops back to its caller`() = runTest {
         val harness = Harness(args(mode = SessionDestination.MODE_FOCUS, durationMin = 1))
 
         harness.viewModel.test(this) {
@@ -116,7 +114,7 @@ class SessionViewModelTest {
 
             // The countdown ticks to zero on virtual time, completing the session.
             assertEquals(
-                NavEvent.SwitchTab(SessionsDestination),
+                NavEvent.Pop,
                 harness.navigator.events.first(),
             )
             assertEquals(SessionSideEffect.PlayChime(ChimeKind.End), awaitNextSideEffect())
@@ -146,7 +144,7 @@ class SessionViewModelTest {
     }
 
     @Test
-    fun `ending early with nothing elapsed records no sit but still hands over`() = runTest {
+    fun `ending early with nothing elapsed records no sit but still pops back`() = runTest {
         val harness = Harness(args(mode = SessionDestination.MODE_FOCUS, durationMin = 25))
 
         harness.viewModel.test(this) {
@@ -157,7 +155,7 @@ class SessionViewModelTest {
             containerHost.handleSessionIntent(SessionIntent.EndSession)
 
             assertEquals(
-                NavEvent.SwitchTab(SessionsDestination),
+                NavEvent.Pop,
                 harness.navigator.events.first(),
             )
             assertTrue(harness.repository.recordedFocusMinutes.isEmpty())

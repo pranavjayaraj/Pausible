@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!-- Debug-only: lets adb force a Sense evaluation tick.
+             Exported so `adb shell am broadcast` can reach it; this manifest
+             is merged into DEBUG builds exclusively. -->
+        <receiver
+            android:name=".SenseDebugReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.reset.app.DEBUG_SENSE_TICK" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>

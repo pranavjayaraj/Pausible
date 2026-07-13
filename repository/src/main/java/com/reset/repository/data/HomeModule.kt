@@ -5,9 +5,16 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.reset.model.domain.CelebrationStore
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.mood.MoodRepository
+import com.reset.model.domain.preferences.PreferencesRepository
+import com.reset.model.domain.presets.PresetsRepository
 import com.reset.model.domain.SoundController
+import com.reset.model.domain.stats.StatsRepository
 import com.reset.model.domain.TimeProvider
+import com.reset.repository.data.mood.MoodRepositoryImpl
+import com.reset.repository.data.preferences.PreferencesRepositoryImpl
+import com.reset.repository.data.presets.PresetsRepositoryImpl
+import com.reset.repository.data.stats.StatsRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -25,7 +32,16 @@ private val Context.afkDataStore: DataStore<Preferences> by preferencesDataStore
 abstract class HomeModule {
 
     @Binds
-    abstract fun bindHomeRepository(impl: HomeRepositoryImpl): HomeRepository
+    abstract fun bindPreferencesRepository(impl: PreferencesRepositoryImpl): PreferencesRepository
+
+    @Binds
+    abstract fun bindStatsRepository(impl: StatsRepositoryImpl): StatsRepository
+
+    @Binds
+    abstract fun bindMoodRepository(impl: MoodRepositoryImpl): MoodRepository
+
+    @Binds
+    abstract fun bindPresetsRepository(impl: PresetsRepositoryImpl): PresetsRepository
 
     @Binds
     @Singleton

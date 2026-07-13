@@ -20,6 +20,7 @@ import com.reset.feature.profile.ProfileState
 import com.reset.feature.profile.R
 import com.reset.feature.profile.ui.components.BreaksTakenCard
 import com.reset.feature.profile.ui.components.FocusBarChart
+import com.reset.feature.profile.ui.components.QuietHoursCard
 import com.reset.feature.profile.ui.components.StreakCard
 
 /**
@@ -29,6 +30,8 @@ import com.reset.feature.profile.ui.components.StreakCard
 @Composable
 fun ProfileScreen(
     state: ProfileState,
+    onAdjustQuietHoursStart: (deltaHours: Int) -> Unit,
+    onAdjustQuietHoursEnd: (deltaHours: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -71,8 +74,16 @@ fun ProfileScreen(
             minutesPerDay = state.focusMinutesPerDay,
             todayIndex = state.todayIndex,
             dayInitials = stringArrayResource(R.array.profile_day_initials).toList(),
+            modifier = Modifier.padding(top = ProfileConstants.chartTopSpacing),
+        )
+
+        QuietHoursCard(
+            startHour = state.quietHoursStart,
+            endHour = state.quietHoursEnd,
+            onAdjustStart = onAdjustQuietHoursStart,
+            onAdjustEnd = onAdjustQuietHoursEnd,
             modifier = Modifier.padding(
-                top = ProfileConstants.chartTopSpacing,
+                top = ProfileConstants.chartTitleSpacing,
                 bottom = AppDimens.screenPaddingV,
             ),
         )

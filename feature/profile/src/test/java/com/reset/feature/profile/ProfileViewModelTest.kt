@@ -14,17 +14,18 @@ import org.orbitmvi.orbit.test.test
 class ProfileViewModelTest {
 
     private fun viewModel(
-        repository: FakeHomeRepository = FakeHomeRepository(),
+        preferencesRepository: FakePreferencesRepository = FakePreferencesRepository(),
+        statsRepository: FakeStatsRepository = FakeStatsRepository(),
         navigator: FakeNavigator = FakeNavigator(),
-    ) = ProfileViewModel(SavedStateHandle(), repository, navigator)
+    ) = ProfileViewModel(SavedStateHandle(), preferencesRepository, statsRepository, navigator)
 
     @Test
     fun `loads persisted stats into state`() = runTest {
-        val repo = FakeHomeRepository(
+        val repo = FakeStatsRepository(
             stats = SessionStats(sessions = 3, totalMin = 75, streak = 12, breaksTaken = 45),
         )
 
-        viewModel(repo).test(this) {
+        viewModel(statsRepository = repo).test(this) {
             expectInitialState()
             runOnCreate()
 
@@ -39,11 +40,11 @@ class ProfileViewModelTest {
     @Test
     fun `loads the weekly focus buckets into state`() = runTest {
         val minutes = listOf(58, 84, 46, 96, 70, 30, 20)
-        val repo = FakeHomeRepository(
+        val repo = FakeStatsRepository(
             weeklyFocus = WeeklyFocus(minutesPerDay = minutes, todayIndex = 4),
         )
 
-        viewModel(repo).test(this) {
+        viewModel(statsRepository = repo).test(this) {
             expectInitialState()
             runOnCreate()
 
@@ -56,9 +57,9 @@ class ProfileViewModelTest {
 
     @Test
     fun `later stat writes keep flowing into state`() = runTest {
-        val repo = FakeHomeRepository(stats = SessionStats(breaksTaken = 1, streak = 1))
+        val repo = FakeStatsRepository(stats = SessionStats(breaksTaken = 1, streak = 1))
 
-        viewModel(repo).test(this) {
+        viewModel(statsRepository = repo).test(this) {
             expectInitialState()
             runOnCreate()
             awaitUntil { it.loaded }
@@ -67,6 +68,32 @@ class ProfileViewModelTest {
 
             val updated = awaitUntil { it.breaksTaken == 2 }
             assertEquals(2, updated.streakDays)
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `quiet hours load from preferences and steppers persist with wrap`() = runTest {
+        val repo = FakePreferencesRepository()
+
+        viewModel(preferencesRepository = repo).test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            // Defaults surface from preferences (22 → 7).
+            awaitUntil { it.quietHoursStart == 22 && it.quietHoursEnd == 7 }
+
+            // 22 + 3 wraps past midnight to 1.
+            containerHost.handleProfileIntent(ProfileIntent.AdjustQuietHoursStart(+3))
+            val wrapped = awaitUntil { it.quietHoursStart == 1 }
+            assertEquals("persisted, not just local state", 1, repo.preferencesFlow.value.quietHoursStartHour)
+            assertEquals(7, wrapped.quietHoursEnd)
+
+            // 7 − 8 wraps backwards to 23.
+            containerHost.handleProfileIntent(ProfileIntent.AdjustQuietHoursEnd(-8))
+            awaitUntil { it.quietHoursEnd == 23 }
+            assertEquals(23, repo.preferencesFlow.value.quietHoursEndHour)
 
             cancelAndIgnoreRemainingItems()
         }

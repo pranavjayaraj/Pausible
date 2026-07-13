@@ -21,7 +21,8 @@ import org.orbitmvi.orbit.test.test
 class HomeViewModelTest {
 
     private class Harness(
-        val repository: FakeHomeRepository = FakeHomeRepository(),
+        val preferencesRepository: FakePreferencesRepository = FakePreferencesRepository(),
+        val statsRepository: FakeStatsRepository = FakeStatsRepository(),
         val navigator: FakeNavigator = FakeNavigator(),
         val celebrationStore: FakeCelebrationStore = FakeCelebrationStore(),
         val startupState: StartupState = StartupState(),
@@ -29,7 +30,8 @@ class HomeViewModelTest {
     ) {
         val viewModel = HomeViewModel(
             SavedStateHandle(),
-            repository,
+            preferencesRepository,
+            statsRepository,
             navigator,
             celebrationStore,
             startupState,
@@ -43,10 +45,8 @@ class HomeViewModelTest {
     @Test
     fun `loads preferences, stats into content state`() = runTest {
         val harness = Harness(
-            repository = FakeHomeRepository(
-                preferences = HomePreferences(durationMin = 10),
-                stats = SessionStats(sessions = 4, streak = 3, breaksTaken = 7),
-            ),
+            preferencesRepository = FakePreferencesRepository(HomePreferences(durationMin = 10)),
+            statsRepository = FakeStatsRepository(SessionStats(sessions = 4, streak = 3, breaksTaken = 7)),
         )
 
         harness.viewModel.test(this) {
@@ -64,7 +64,9 @@ class HomeViewModelTest {
 
     @Test
     fun `a failed load surfaces the error state and still releases the splash`() = runTest {
-        val harness = Harness(repository = FakeHomeRepository(failPreferences = true))
+        val harness = Harness(
+            preferencesRepository = FakePreferencesRepository(failPreferences = true),
+        )
 
         harness.viewModel.test(this) {
             expectInitialState()
@@ -81,7 +83,7 @@ class HomeViewModelTest {
     @Test
     fun `the meditate hero starts a focus session with the preset interval`() = runTest {
         val harness = Harness(
-            repository = FakeHomeRepository(preferences = HomePreferences(durationMin = 30)),
+            preferencesRepository = FakePreferencesRepository(HomePreferences(durationMin = 30)),
         )
 
         harness.viewModel.test(this) {
@@ -149,7 +151,7 @@ class HomeViewModelTest {
     @Test
     fun `a finished break pops the celebration banner with the current streak`() = runTest {
         val harness = Harness(
-            repository = FakeHomeRepository(stats = SessionStats(streak = 5)),
+            statsRepository = FakeStatsRepository(SessionStats(streak = 5)),
         )
 
         harness.viewModel.test(this) {

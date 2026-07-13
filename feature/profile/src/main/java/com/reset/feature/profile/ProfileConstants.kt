@@ -29,4 +29,8 @@ object ProfileConstants {
 
     /** Bars for zero-minute days keep a visible stub, like the design's shortest bar. */
     const val CHART_MIN_BAR_FRACTION = 0.12f
+
+    val quietStepperSize = 34.dp
+    /** Fixed so "12 AM" ↔ "7 PM" changes don't shift the steppers. */
+    val quietHourValueWidth = 64.dp
 }

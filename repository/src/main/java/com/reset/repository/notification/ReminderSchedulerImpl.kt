@@ -2,7 +2,7 @@ package com.reset.repository.notification
 
 import android.content.Context
 import androidx.work.ExistingWorkPolicy
-import com.reset.model.domain.HomeRepository
+import com.reset.model.domain.preferences.PreferencesRepository
 import com.reset.model.domain.ReminderScheduler
 import com.reset.model.domain.ReminderTimeCalculator
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -16,7 +16,7 @@ import javax.inject.Inject
  */
 class ReminderSchedulerImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val repository: HomeRepository,
+    private val preferencesRepository: PreferencesRepository,
 ) : ReminderScheduler {
 
     override suspend fun onPreferencesChanged() = sync(ExistingWorkPolicy.REPLACE)
@@ -24,7 +24,7 @@ class ReminderSchedulerImpl @Inject constructor(
     override suspend fun ensureScheduled() = sync(ExistingWorkPolicy.KEEP)
 
     private suspend fun sync(policy: ExistingWorkPolicy) {
-        val prefs = repository.preferences.first()
+        val prefs = preferencesRepository.preferences.first()
         if (!prefs.remindersEnabled) {
             ReminderNotificationWork.cancel(context)
             return
