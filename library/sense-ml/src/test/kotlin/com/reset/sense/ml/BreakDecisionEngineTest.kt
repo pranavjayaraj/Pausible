@@ -95,6 +95,61 @@ class BreakDecisionEngineTest {
         assertNotEquals(GateReason.QUIET_HOURS, rulesOnlyEngine().decide(deepFocusInput(hour = 8)).gateReason)
     }
 
+    // ------------------------------------------------------------ ε-exploration
+
+    /** Calm-but-borderline context: scores ≈0.385, just under BALANCED's 0.40 soft bar. */
+    private fun borderlineInput() = deepFocusInput(
+        continuousScreenOnMin = 36,
+        appSwitchCount = 2,
+        coldOpenCount = 0,
+    ).let { it.copy(device = it.device.copy(charging = false)) }
+
+    @Test
+    fun `epsilon zero never explores - todays default`() {
+        val engine = BreakDecisionEngine(model = null) // ε defaults to 0
+        repeat(50) {
+            val d = engine.decide(borderlineInput())
+            assertEquals(PromptAction.SUPPRESS, d.action)
+            assertTrue(!d.explored)
+        }
+    }
+
+    @Test
+    fun `borderline suppress explores as a soft nudge when epsilon fires`() {
+        val engine = BreakDecisionEngine(model = null, explorationEpsilon = 1f)
+        val d = engine.decide(borderlineInput())
+        assertEquals("softest intensity only", PromptAction.SOFT_NUDGE, d.action)
+        assertTrue(d.explored)
+        assertTrue(d.reason.endsWith("EXPLORED"))
+        assertEquals(SenseMode.BALANCED.softThreshold, d.appliedThreshold)
+        assertEquals(1f, d.explorationEpsilon)
+    }
+
+    @Test
+    fun `far-below-threshold contexts are never explored`() {
+        val engine = BreakDecisionEngine(model = null, explorationEpsilon = 1f)
+        // Minimal context: idle pickup, scores well under the 0.30 band floor.
+        val d = engine.decide(
+            deepFocusInput(continuousScreenOnMin = 2, appSwitchCount = 0, coldOpenCount = 0)
+                .let { it.copy(device = it.device.copy(charging = false, minutesInCurrentActivity = 5)) },
+        )
+        assertEquals(PromptAction.SUPPRESS, d.action)
+        assertTrue("exploration only probes borderline calls", !d.explored)
+    }
+
+    @Test
+    fun `hard gates and wind-down are never explored`() {
+        val engine = BreakDecisionEngine(model = null, explorationEpsilon = 1f)
+        val gated = engine.decide(deepFocusInput(promptsToday = 3))
+        assertEquals(GateReason.DAILY_CAP, gated.gateReason)
+        assertTrue(!gated.explored)
+
+        val night = engine.decide(deepFocusInput(hour = 23)) // wind-down mode, below 0.55
+        assertEquals(PromptAction.SUPPRESS, night.action)
+        assertTrue("sleep context is never explored", !night.explored)
+        assertEquals(0f, night.explorationEpsilon)
+    }
+
     // ------------------------------------------------------------ earned-trust daily cap
 
     @Test

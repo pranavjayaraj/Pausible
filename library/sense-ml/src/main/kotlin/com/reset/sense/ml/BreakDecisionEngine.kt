@@ -3,6 +3,7 @@ package com.reset.sense.ml
 import com.reset.sense.ml.FeatureSchema.IDX_APP_SWITCH_COUNT
 import com.reset.sense.ml.FeatureSchema.IDX_CONTINUOUS_SCREEN_ON
 import kotlin.math.min
+import kotlin.random.Random
 
 /** What the engine decided to do this tick. */
 enum class PromptAction { SUPPRESS, SOFT_NUDGE, FULL_PROMPT }
@@ -27,6 +28,15 @@ data class Decision(
     val modelAlpha: Float,
     val gateReason: GateReason?,
     val reason: String,
+    /**
+     * Propensity trail — logged so future off-policy evaluation can compute
+     * P(show | context) for every decision ever made. Decisions made without
+     * this cannot be back-filled; that is why it ships before launch, dormant.
+     */
+    val appliedThreshold: Float? = null,
+    val explorationEpsilon: Float = 0f,
+    /** True when this prompt exists only because the ε draw fired. */
+    val explored: Boolean = false,
 )
 
 /**
@@ -50,6 +60,17 @@ class BreakDecisionEngine(
      *  effective daytime-equivalent bar of ~0.70 — above BALANCED's full
      *  threshold without double-penalizing the night context. */
     private val windDownThreshold: Float = 0.55f,
+    /**
+     * ε-exploration, DORMANT until enough users exist to spread the tax thin.
+     * When > 0: a borderline SUPPRESS (within [explorationBand] below the
+     * soft threshold) flips to a SOFT_NUDGE with probability ε. This is what
+     * lets the model eventually learn beyond the rules engine — without it,
+     * outcomes are only ever observed where the current policy already fires
+     * (selection bias the model cannot escape). Never applies through hard
+     * gates or in wind-down mode; never escalates to FULL_PROMPT.
+     */
+    private val explorationEpsilon: Float = 0f,
+    private val explorationBand: Float = 0.10f,
 ) {
 
     fun decide(input: DecisionInput): Decision {
@@ -94,14 +115,31 @@ class BreakDecisionEngine(
                 modelAlpha = alpha,
                 gateReason = null,
                 reason = "wind_down blended=%.2f threshold=%.2f".format(blended, windDownThreshold),
+                appliedThreshold = windDownThreshold,
+                explorationEpsilon = 0f, // sleep context is never explored
             )
         }
 
-        val action = when {
+        var action = when {
             blended >= mode.fullThreshold -> PromptAction.FULL_PROMPT
             blended >= mode.softThreshold -> PromptAction.SOFT_NUDGE
             else -> PromptAction.SUPPRESS
         }
+
+        // ε-exploration: a borderline suppress occasionally becomes a soft
+        // nudge, generating the counterfactual outcomes off-policy learning
+        // needs. Softest intensity only; the propensity trail (ε + explored)
+        // is logged either way so analysis can reweight correctly.
+        var explored = false
+        if (action == PromptAction.SUPPRESS &&
+            explorationEpsilon > 0f &&
+            blended >= mode.softThreshold - explorationBand &&
+            Random.nextFloat() < explorationEpsilon
+        ) {
+            action = PromptAction.SOFT_NUDGE
+            explored = true
+        }
+
         val breakType = if (action == PromptAction.SUPPRESS) BreakType.NONE else mapBreakType(input, features)
 
         return Decision(
@@ -116,7 +154,11 @@ class BreakDecisionEngine(
                 append("blended=%.2f (rules=%.2f".format(blended, ruleScore))
                 if (modelScore != null) append(", model=%.2f, α=%.2f".format(modelScore, alpha))
                 append(") mode=$mode")
+                if (explored) append(" EXPLORED")
             },
+            appliedThreshold = mode.softThreshold,
+            explorationEpsilon = explorationEpsilon,
+            explored = explored,
         )
     }
 

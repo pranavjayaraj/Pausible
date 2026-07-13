@@ -40,6 +40,9 @@ class SenseDecisionLog @Inject constructor(
             gateReason = decision.gateReason?.name,
             featuresCsv = features?.joinToString(","),
             schemaVersion = FeatureSchema.SCHEMA_VERSION,
+            appliedThreshold = decision.appliedThreshold,
+            explorationEpsilon = decision.explorationEpsilon,
+            explored = decision.explored,
         ),
     )
 

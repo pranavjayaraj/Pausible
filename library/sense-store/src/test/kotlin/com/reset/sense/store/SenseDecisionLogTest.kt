@@ -256,6 +256,22 @@ class SenseDecisionLogTest {
     }
 
     @Test
+    fun `propensity trail persists on the logged row`() = runTest {
+        val id = log.logDecision(
+            shownDecision().copy(
+                appliedThreshold = 0.40f,
+                explorationEpsilon = 0.05f,
+                explored = true,
+            ),
+            features, t0, 15,
+        )
+        val row = dao.byId(id)!!
+        assertEquals(0.40f, row.appliedThreshold)
+        assertEquals(0.05f, row.explorationEpsilon, 0f)
+        assertTrue(row.explored)
+    }
+
+    @Test
     fun `purge respects retention`() = runTest {
         log.logDecision(shownDecision(), features, t0 - 100 * day, 15)
         log.logDecision(shownDecision(), features, t0 - 10 * day, 15)

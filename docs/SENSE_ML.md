@@ -307,10 +307,20 @@ It is not, and must never become, the training label.
 - Train on **completion, not clicks**, or the copy bandit (future) will drift toward
   clickbait that gets taps and abandons.
 - Selection bias: the rules engine only shows prompts where rules already fire.
-  Before training v2 on real data, add **ε-exploration** (~5%) at borderline scores
-  inside allowed windows — without it the model cannot learn beyond the rules.
+  Before training v2 on real data, turn on **ε-exploration** (~5%) at borderline
+  scores inside allowed windows — without it the model cannot learn beyond the
+  rules. The plumbing is shipped and dormant (§8.6).
 
-Export seam: `SenseDecisionLog.trainingRows()` → `(FloatArray(34), positive)` pairs.
+**Propensity trail (shipped, active from day one):** every decision row carries
+`appliedThreshold`, `explorationEpsilon`, and `explored` alongside
+`blendedScore`. Together these reconstruct P(show | context) for every
+historical decision — the input off-policy evaluation (IPS/doubly-robust)
+needs to score a candidate model against logged data BEFORE shipping it.
+These fields cannot be back-filled; that is why they ship before launch even
+though nothing consumes them yet. Do not remove or stop populating them.
+
+Export seam: `SenseDecisionLog.trainingRows()` → `(FloatArray(34), signed weight)` pairs
+(schema-filtered; see §8.1).
 
 ---
 
@@ -395,16 +405,65 @@ the (future) real-data loader: filter by `schemaVersion`, pad old rows to the
 new width, apply the down-weight. Never backfill across a reorder, removal, or
 renormalization — strict exclusion is the only honest option there.
 
-### 8.6 Planned next stages (design already agreed)
-- **ε-exploration** at borderline scores (§7) — prerequisite for training v2.
-- **Copy-variant bandit**: 4–6 notification copy archetypes as arms; log
-  `copy_variant` on the decision row; Thompson sampling per user.
-- **Break-type bandit** replacing the static `mapBreakType` table
-  (`model_task: break_type_bandit`).
-- **On-device per-user updates**: logistic head / bandit posterior over the frozen
-  global model (bounded state in Room). Never retrain the full net on device.
-- **`trained_at` staleness policy**: decay α toward rules if the global model is
-  > 6 months old.
+### 8.6 Roadmap to a world-class timing model (design agreed; staged by data volume)
+
+The meta-principle: this problem is ~20% model architecture, ~80% data regime.
+Exploration, propensities, honest counterfactual evaluation, and an objective
+matching the product truth compound; fancy models on biased logged data plateau.
+Each stage below has an ACTIVATION TRIGGER — building it earlier is premature.
+
+1. **ε-exploration** — PLUMBING SHIPPED, DORMANT.
+   `BreakDecisionEngine.explorationEpsilon` (0f in SenseDeliveryModule).
+   Exploration only ever upgrades a borderline SUPPRESS (within 0.10 of the
+   soft threshold) to a SOFT_NUDGE; never through hard gates, never in
+   wind-down, never to FULL_PROMPT. The propensity trail (§7) is logged from
+   day one regardless.
+   *Trigger: raise ε to ~0.05 once ~hundreds of users spread the tax thin.*
+
+2. **Empirical-Bayes shrinkage** for the personalization block: shrink
+   per-hour accept rates toward the user's overall rate, and the user's rate
+   toward the population rate — "2 of 3 accepted at 14:00" should read ~0.55,
+   not 0.67. ~10 lines in `SenseDecisionLog.responseHistory()`.
+   *Trigger: first users with 10+ outcomes.*
+
+3. **Off-policy evaluation harness** in `ml/` (IPS / doubly-robust over the
+   propensity trail): score any candidate model against logged data BEFORE
+   shipping. Turns retraining from "train and hope" into "train and measure".
+   *Trigger: ~5–10k labeled rows.*
+
+4. **Budget-aware dynamic threshold**: with 3–5 prompts/day, pointwise
+   P(accept) is the wrong objective — firing at a 0.62 morning window is a
+   mistake if 0.80 comes at 14:00. Track each user's daily score distribution
+   and fire only above their personal ~85th percentile, pacing intraday
+   (ad-delivery pacing math). *Trigger: alongside stage 3.*
+
+5. **Real-data retrain** with the completion-graded sample weights
+   (§8.5 loader; weights from `PromptOutcome.trainingWeight`).
+   *Trigger: same ballpark; ship only if it beats rules AND the bootstrap
+   model on OPE.*
+
+6. **Thompson sampling** over a Bayesian last layer (replaces ε-greedy:
+   explores where uncertainty is highest, converging faster per annoyance
+   spent) + calibrated abstention (widen toward rules when uncertain).
+   **Copy-variant bandit** (4–6 archetypes as arms, `copy_variant` on the
+   decision row) and **break-type bandit** (`model_task: break_type_bandit` —
+   never load into the acceptance slot). **On-device per-user head**
+   (logistic layer / bandit posterior over the frozen global model, bounded
+   state in Room — never retrain the full net on device).
+   *Trigger: after stages 1–5 prove the loop compounds.*
+
+7. **The long game**: uplift objective (optimize INCREMENTAL completed breaks,
+   `P(break|prompt) − P(break|silence)`, estimable only with exploration data —
+   raw acceptance rewards prompting people who'd have rested anyway); small
+   temporal model (GRU over event sequences) — only if it beats the MLP on
+   OPE, since it costs the pure-Kotlin inference story (LiteRT).
+   **`trained_at` staleness policy**: decay α toward rules if the global
+   model is > 6 months old.
+
+Supporting signal work, any time: notification-listener seam (makes
+`cold_open_count` honest), mood check-in joins as outcome enrichment,
+k-anonymized aggregate calibration of the global prior (opt-in only, never
+raw rows — see §10).
 
 ---
 
@@ -466,3 +525,27 @@ set). The rules that keep it that way:
 - Public API sketch, naming (`riverbloom-sense`, host schedules *intent + window*,
   never timestamps), and the full friction table live in the session design notes;
   the one real refactor is de-Hilt.
+
+### KMP / iOS portability (assessed; not planned work)
+
+The decision core is ~1 week from `commonMain`: `:sense-ml` has two JVM leaks
+(`MessageDigest` in `specHash()` → expect/actual, `"%.2f".format()` in reason
+strings), the signals pure-logic half (`RawUsageEvent`, normalizer, aggregator)
+is already platform-independent by design, `SenseEvaluator` needs
+`java.util.Calendar` → kotlinx-datetime, Room has KMP support (2.7+), and the
+de-Hilt bill is shared with SDK extraction. Skipping TFLite pays off again
+here: the pure-Kotlin forward pass runs unchanged on iOS.
+
+The hard parts are platform, not Kotlin — and no architecture fixes them:
+- **iOS signal poverty**: no `UsageStatsManager` equivalent (Screen Time APIs
+  are entitlement-locked). Only ~15 of 34 features are populatable (motion,
+  charging, time, notification outcomes, own-app usage). iOS Sense would be a
+  degraded tier — closer to smart-scheduled reminders than context detection.
+- **iOS background model**: `BGAppRefreshTask` is opportunistic, not periodic.
+  The evaluator's statelessness (every tick re-derives everything) is already
+  the right shape; the strategy shifts to evaluate-on-foreground + granted
+  refreshes + pre-scheduled local notifications.
+
+Discipline that keeps the option open (costs nothing now): no new `java.*`
+imports in `:sense-ml` or the pure-logic halves; platform capabilities enter
+only through the seams; prefer schema features with graceful neutral values.

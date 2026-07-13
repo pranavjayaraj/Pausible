@@ -40,6 +40,10 @@ internal abstract class SenseDeliveryModule {
             BreakDecisionEngine(
                 model = modelLoader.loadOrNull(), // null → rules-only, by design
                 mode = SenseMode.BALANCED,
+                // DORMANT: raise to ~0.05 once the user base is large enough
+                // to spread the exploration tax thin (see SENSE_ML.md §8.6).
+                // The propensity trail is logged either way from day one.
+                explorationEpsilon = 0f,
             )
     }
 }

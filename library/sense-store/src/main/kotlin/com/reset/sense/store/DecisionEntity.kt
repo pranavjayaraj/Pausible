@@ -44,6 +44,16 @@ data class DecisionEntity(
      * (Outcome-stat reads ignore this; they never touch the features.)
      */
     val schemaVersion: Int = FeatureSchema.SCHEMA_VERSION,
+    /**
+     * Propensity trail for off-policy evaluation: the threshold this decision
+     * was judged against, the exploration ε in effect (0 while dormant), and
+     * whether this prompt exists only because the ε draw fired. Together with
+     * [blendedScore] these reconstruct P(show | context) for every historical
+     * decision — data that cannot be back-filled later.
+     */
+    val appliedThreshold: Float? = null,
+    val explorationEpsilon: Float = 0f,
+    val explored: Boolean = false,
     /** PromptOutcome name. PENDING until a response or the ignore sweep. */
     val outcome: String = PromptOutcome.PENDING.name,
     val outcomeAtMs: Long? = null,

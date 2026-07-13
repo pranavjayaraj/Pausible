@@ -5,7 +5,9 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [DecisionEntity::class],
-    version = 2, // v2: DecisionEntity.schemaVersion (training rows are schema-stamped)
+    // v2: DecisionEntity.schemaVersion (training rows are schema-stamped)
+    // v3: propensity trail (appliedThreshold, explorationEpsilon, explored)
+    version = 3,
     exportSchema = true,
 )
 abstract class SenseDatabase : RoomDatabase() {
