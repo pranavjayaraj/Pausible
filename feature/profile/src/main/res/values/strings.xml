@@ -2,6 +2,7 @@
 <resources>
     <string name="profile_title">Weekly Progress</string>
     <string name="profile_subtitle">Here is a summary of your mindful productivity.</string>
+    <string name="profile_settings_content_description">Settings</string>
 
     <string name="profile_breaks_label">🌿 BREAKS TAKEN</string>
     <string name="profile_chip_stretch">Stretch</string>
@@ -13,12 +14,6 @@
 
     <string name="profile_chart_title">Focus Hours per Day</string>
 
-    <string name="profile_quiet_hours_label">🌙 QUIET HOURS</string>
-    <string name="profile_quiet_hours_hint">No break nudges in this window — just one gentle wind-down if you\'re up late.</string>
-    <string name="profile_quiet_hours_start">Starts</string>
-    <string name="profile_quiet_hours_end">Ends</string>
-    <string name="profile_quiet_hours_minus">−</string>
-    <string name="profile_quiet_hours_plus">+</string>
     <!-- Monday-first, matching WeeklyFocus.minutesPerDay. -->
     <string-array name="profile_day_initials">
         <item>M</item>

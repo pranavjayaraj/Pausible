@@ -1,6 +1,8 @@
 package com.reset.feature.profile.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,10 +24,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.reset.core.designsystem.AppColors
 import com.reset.core.designsystem.AppShapes
 import com.reset.core.designsystem.AppType
+import com.reset.core.designsystem.GearIcon
 import com.reset.core.designsystem.SproutExpression
 import com.reset.core.designsystem.SproutMascot
 import com.reset.feature.profile.ProfileConstants
@@ -34,6 +40,27 @@ private val chipShape = RoundedCornerShape(12.dp)
 private val chipPaddingH = 12.dp
 private val chipPaddingV = 4.dp
 private val barShape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 4.dp, bottomEnd = 4.dp)
+
+/** The circular bordered gear button that opens Settings, per the design's header. */
+@Composable
+fun SettingsGearButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val label = stringResource(R.string.profile_settings_content_description)
+    Box(
+        modifier
+            .size(ProfileConstants.gearButtonSize)
+            .clip(CircleShape)
+            .background(AppColors.surfaceWhite)
+            .border(ProfileConstants.gearButtonBorder, AppColors.exploreBorder, CircleShape)
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        GearIcon(
+            modifier = Modifier.size(ProfileConstants.gearIconSize),
+            tint = AppColors.inkSoft,
+        )
+    }
+}
 
 /** The teal "breaks taken" stat card with its break-kind chips. */
 @Composable

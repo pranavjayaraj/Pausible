@@ -109,13 +109,15 @@ def rules_baseline_score(X):
     MUST stay in sync with RulesEngine.kt — this is the bar the model has to
     beat before it ships."""
     still = X[:, 20]
+    focus = X[:, 5]
     score = (
-        0.40 * X[:, 5]                 # continuous screen-on
+        0.40 * focus * (2.0 - focus)   # continuous screen-on, rises then saturates
         + 0.20 * X[:, 1]               # app switching
         + 0.15 * X[:, 23] * still      # long stillness (only while still)
         + 0.10 * X[:, 6]               # distracting-app returns
         + 0.10 * X[:, 7]               # cold opens
         + 0.05 * X[:, 24]              # charging
+        + 0.15 * (2.0 * X[:, 31] - 1.0)  # per-hour receptivity (0.5 prior -> 0)
         - 0.30 * np.maximum(0.0, 1.0 - X[:, 27] * 4)  # cooldown (<60 min since break)
         - 0.20 * X[:, 28]              # recent dismissals
         - 0.15 * X[:, 19]              # late night

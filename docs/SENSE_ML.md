@@ -13,7 +13,9 @@ Sense decides **when to deliver a microbreak notification, how strongly, and whi
 break to suggest** — and adapts per user from their responses. It combines four signal
 layers (app usage, system usage, physical activity, notification feedback) into a
 34-float feature vector, evaluated every ~15 minutes by a blend of a **deterministic
-rules engine** and a **tiny on-device neural network** (~1.5K params, 17.5 KB). The
+rules engine** and a **tiny on-device neural network** (~1.5K params, 17.5 KB).
+**Launch configuration is rules-only** — the model slot is wired but disabled
+(`SenseDeliveryConstants.MODEL_ENABLED = false`; see §5 "Launch status"). The
 product principle is restraint: hard gates the model can never override (driving,
 quiet hours, 3-prompts/day cap), honest labels (only completed breaks are true
 positives), and a reward structure whose real objective is *"the user never disables
@@ -69,6 +71,7 @@ app/                         Host wiring
   MainActivity.kt            handleSenseAction() deep-link (zero-transition start)
   ui/onboarding/SensePermissionsScreen.kt   3-permission onboarding step
   src/debug/…/SenseDebugReceiver.kt         adb-triggerable tick (debug only)
+  src/debug/…/SenseDebugActivity.kt         pipeline inspector screen (debug only)
 ```
 
 Dependency direction (enforced; keep it this way — it is what makes SDK extraction cheap):
@@ -105,14 +108,18 @@ WorkManager tick (15 min, battery-not-low)          SenseTickWorker
           (sense-delivery interface; the app binds it to HomeRepository's
           DataStore prefs in SenseConfigModule; edited from the Profile tab's
           Quiet Hours card) → see WIND-DOWN EXCEPTION below
-      cooldown (< 20 min since completed break)
+      cooldown (< 20 min since last SUCCESS — a tap, while the temporary
+        CLICK_IS_SUCCESS launch policy is on; see §7)
       daily cap — earned-trust adaptive: base 3/day, rises to 5 only when
         trailing completion rate ≥ 0.6 over ≥ 20 labeled outcomes
         (RulesEngine.dailyPromptCap; self-decays with the trailing rate)
-      dead hour (≥5 prompts at this hour, <5% acceptance)
+      dead hour (≥5 prompts at this hour, <5% acceptance — judged on the RAW
+        per-hour rate, `ResponseHistory.acceptRateThisHourRaw`; the EB-shrunk
+        rate would pull a genuinely dead hour above the bar forever)
  → build FloatArray(34)                             FeatureBuilder
  → ruleScore (interpretable 0..1)                   RulesEngine.score
  → modelScore = P(accept | context)                 AcceptanceModel.predict
+      (launch config: model = null → this step is skipped; see §5)
  → blend: final = α·model + (1−α)·rules             BreakDecisionEngine
       α = 0.7 · min(1, labeledOutcomes / 200)       ← cold start runs pure rules
  → threshold by SenseMode:
@@ -125,6 +132,10 @@ WorkManager tick (15 min, battery-not-low)          SenseTickWorker
       swipe  → DISMISSED_FAST (≤5 s) / DISMISSED_SLOW
       snooze → SNOOZED + one re-evaluation in 10 min (gates re-checked)
       silence→ IGNORED (next tick's sweep)
+      app opened ≤10 min after a pending prompt (no tap) → OPENED_APP
+        (launch retention policy; MainActivity.onResume →
+         SenseBreakCoordinator.onHostOpened → resolveAppOpenOutcomes;
+         explicit responses always win, wind-downs excluded)
  → break finishes → CelebrationEvent.BreakFinished  SenseBreakCoordinator
       → outcome upgraded to COMPLETED               ← the true positive label
 ```
@@ -182,7 +193,7 @@ All values normalized to ≈[0,1] (cyclical encodings are [−1,1]).
 | 6 | distracting_return_count | ÷5 | sessions + category |
 | 7 | cold_open_count | ÷10 (unlocks − notif-driven) | unlock events |
 | 8 | unlock_count_last_hour | ÷15 | unlock events |
-| 9–14 | app category one-hot | work/social/video/game_dating/chat/other | PackageManager |
+| 9–14 | app category one-hot | work/social/video/game_dating/chat/other — Kotlin enum uses behavior names (WORK/SOCIAL_FEED/STREAMING/REWARD_LOOP/MESSAGING/OTHER), same slots; spec labels rename at the next schema bump | PackageManager |
 | 15–18 | hour & day-of-week sin/cos | cyclical (24 h / 7 d) | clock |
 | 19 | late_night_flag | 23:00–05:00 | clock |
 | 20–22 | activity one-hot | still/on_foot/unknown | Transition API |
@@ -202,6 +213,12 @@ Notes:
 - **Block 27–33 is the personalization block.** Two users in identical contexts get
   different predictions because their own history flows through these features —
   personalization exists even before any on-device training.
+- **Features 30–31 carry empirical-Bayes-shrunk rates** (§8.6 stage 2, shipped):
+  `SenseDecisionLog.responseHistory()` shrinks the per-hour rate toward the
+  user's overall rate (k = 5 pseudo-observations) and the overall rate toward
+  the 0.5 population prior. The cold-start contract (0.5 = no evidence) is
+  unchanged; sparse buckets just stop swinging on a handful of outcomes. The
+  dead-hour gate deliberately reads the raw rate instead.
 - **IN_VEHICLE never reaches the model** (hard-gated upstream; maps defensively to
   the `unknown` slot in `FeatureBuilder`).
 - **What is deliberately absent:** package names, notification content, locations,
@@ -216,6 +233,23 @@ Notes:
 - Predicts: **P(user accepts a prompt shown now)** — `model_task: accept_given_prompt`.
 - Artifact: `model.json` ≈ 17.5 KB (weights as raw arrays + metadata handshake).
 - Current bootstrap metrics: **val PR-AUC 0.711 vs rules baseline 0.575** (base rate 0.43).
+  Caveat: both numbers are measured on a validation split of the SAME simulator
+  that generated the training labels — they prove the MLP reconstructs
+  `true_accept_logit()` better than the linear rules score does, nothing about
+  real users.
+
+**Launch status: DISABLED (rules-only).** `SenseDeliveryConstants.MODEL_ENABLED`
+is `false`, so `SenseDeliveryModule` passes `model = null` and the engine runs
+pure rules — a path it supports natively. Rationale: the bundled model was
+trained only on the hand-designed simulator (it cannot know anything the
+simulator's author didn't hand-code), and the α ramp kept it near-inert for a
+user's first ~2 months regardless. The two genuinely better terms of the
+simulator formula (saturating focus pressure, per-hour receptivity) were
+promoted directly into `RulesEngine.score()` instead. Everything a future
+model needs — decision log, completion-graded labels, propensity trail —
+is still recorded while disabled. **Re-enable** by flipping the flag, but only
+once a real-data retrain beats the (now stronger) rules baseline on the ship
+gate AND on off-policy evaluation (§8.6 stages 3–5).
 
 **Why no TFLite:** at this size the forward pass is three matrix-vector products —
 [`AcceptanceModel.kt`](../library/sense-ml/src/main/kotlin/com/reset/sense/ml/AcceptanceModel.kt)
@@ -248,10 +282,17 @@ Three mechanisms make Python-training ↔ Kotlin-inference drift a **loud** fail
 — the trainer's ship gate uses it as the bar to beat):
 
 ```
-+0.40·continuous_screen_on  +0.20·app_switching  +0.15·stillness·still
++0.40·focus·(2−focus)       +0.20·app_switching  +0.15·stillness·still
 +0.10·distracting_returns   +0.10·cold_opens     +0.05·charging
++0.15·(2·accept_rate_this_hour − 1)
 −0.30·cooldown(<60 min)     −0.20·dismissals_24h −0.15·late_night
 ```
+
+(`focus·(2−focus)` = saturating screen-on pressure — the 30th minute says more
+than the 60th; the receptivity term is centered on the 0.5 cold-start prior so
+a fresh user gets exactly zero from it, and it reads the EB-shrunk rate. Both
+terms were promoted from the simulator's `true_accept_logit()` when the model
+was parked — see §5 "Launch status".)
 
 Break-type mapping (`BreakDecisionEngine.mapBreakType`, priority order = safety →
 circadian → cognitive load):
@@ -277,6 +318,20 @@ prompts); this is deliberate conservatism — fewer total prompts, never more.
 The decision log ([`DecisionEntity`](../library/sense-store/src/main/kotlin/com/reset/sense/store/DecisionEntity.kt))
 is simultaneously the personalization source, the gate input, and the training dataset.
 
+> **TEMPORARY LAUNCH POLICY — `PromptOutcome.CLICK_IS_SUCCESS = true`:**
+> completed sessions will be rare at launch, so RETENTION is the success
+> signal: a notification TAP (`ACCEPTED`) or an app open within 10 min of a
+> pending prompt (`OPENED_APP`, inferred on host onResume) both count as
+> full success everywhere derived state is computed — trainingWeight +1.0,
+> the cooldown gate starts from them, the earned-trust cap counts them, and
+> `break_completion_rate` effectively reads "success rate". The LOG stays
+> honest — tap, attributed open, and completion are recorded as distinct
+> outcomes and the coordinator still upgrades to COMPLETED — so flipping
+> the flag back is lossless for all historical rows (and also disables the
+> app-open attribution). It MUST flip back to completions before any
+> real-data training or copy bandit ships (the labeling rules below explain
+> why). The table shows the durable philosophy, i.e. the flag-off values.
+
 **Outcome taxonomy** (`PromptOutcome`) — the distinctions carry training semantics.
 The weights below are ENFORCED IN CODE as `PromptOutcome.trainingWeight` (signed
 sample weight: sign = label, magnitude = how much the row teaches); the training
@@ -288,6 +343,7 @@ design decision — expect it to be challenged in review.
 |---|---|---|
 | COMPLETED | break finished (host-reported); for WIND_DOWN: screen off ≤10 min after the nudge | **+1.0 — the true positive** |
 | ACCEPTED | tapped, not (yet) completed | +0.2 (attention ≠ success) |
+| OPENED_APP | app foregrounded ≤10 min after a pending prompt, no tap | +0.2 (same tier as a tap) |
 | SNOOZED | right idea, wrong minute | +0.1 (timing signal, not rejection) |
 | IGNORED | never responded (30-min sweep) | −0.1 (may not have seen it) |
 | DISMISSED_SLOW | swiped after >5 s | −0.5 (considered, declined) |
@@ -420,11 +476,11 @@ Each stage below has an ACTIVATION TRIGGER — building it earlier is premature.
    day one regardless.
    *Trigger: raise ε to ~0.05 once ~hundreds of users spread the tax thin.*
 
-2. **Empirical-Bayes shrinkage** for the personalization block: shrink
-   per-hour accept rates toward the user's overall rate, and the user's rate
-   toward the population rate — "2 of 3 accepted at 14:00" should read ~0.55,
-   not 0.67. ~10 lines in `SenseDecisionLog.responseHistory()`.
-   *Trigger: first users with 10+ outcomes.*
+2. **Empirical-Bayes shrinkage** — SHIPPED. `SenseDecisionLog.responseHistory()`
+   shrinks per-hour accept rates toward the user's overall rate, and the
+   user's rate toward the population prior (k = 5 pseudo-observations) —
+   "2 of 3 accepted at 14:00" reads ~0.55, not 0.67. The dead-hour gate keeps
+   the raw rate (`acceptRateThisHourRaw`) so dead hours can still die.
 
 3. **Off-policy evaluation harness** in `ml/` (IPS / doubly-robust over the
    propensity trail): score any candidate model against logged data BEFORE
@@ -492,6 +548,24 @@ adb logcat -s SenseDebug     # → action=… breakType=… blended=… (rules=�
 ```
 A fresh install mostly logs SUPPRESS (cold-start cooldown priors, empty usage window).
 That is correct behavior. Use the phone a few minutes and re-trigger.
+
+**Debug inspector screen (debug builds only):** the extra "Sense Debug"
+launcher icon (or `adb shell am start -n com.reset.app/.SenseDebugActivity`)
+opens a disposable on-device inspector: engine config (model on/off, α,
+prompts today vs cap), a live phone-usage capture through the evaluator's own
+`SnapshotSource` seam (screen-on/continuous minutes, app switches, unlocks,
+category, activity state, battery, signals tier — i.e. permission health),
+the exact `ResponseHistory` the engine would see now,
+gate-context inputs (quiet-hours bounds, wind-downs tonight), a collapsible
+raw usage-event telemetry dump (last hour, queried transiently — raw events
+are still never persisted, and package names never leave the screen),
+and the full decision log newest-first — each tick's action, why it happened
+(hard gate / scores vs threshold / environment suppress), the outcome and its
+training weight, and tap-to-expand on any shown row revealing its persisted
+34-float feature vector with schema names, out-of-range values flagged.
+A "Run tick" button fires a real evaluation. Lives entirely in
+`app/src/debug/` (`SenseDebugActivity.kt` + one manifest entry); delete those
+two things to remove it — nothing else references it.
 
 ---
 

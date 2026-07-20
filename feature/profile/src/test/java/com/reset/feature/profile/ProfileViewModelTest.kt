@@ -2,6 +2,7 @@ package com.reset.feature.profile
 
 import androidx.lifecycle.SavedStateHandle
 import com.reset.feature.profile.navigation.ProfileIntent
+import com.reset.feature.settings.api.SettingsDestination
 import com.reset.model.domain.model.SessionStats
 import com.reset.model.domain.model.WeeklyFocus
 import com.reset.navigation.NavEvent
@@ -14,10 +15,9 @@ import org.orbitmvi.orbit.test.test
 class ProfileViewModelTest {
 
     private fun viewModel(
-        preferencesRepository: FakePreferencesRepository = FakePreferencesRepository(),
         statsRepository: FakeStatsRepository = FakeStatsRepository(),
         navigator: FakeNavigator = FakeNavigator(),
-    ) = ProfileViewModel(SavedStateHandle(), preferencesRepository, statsRepository, navigator)
+    ) = ProfileViewModel(SavedStateHandle(), statsRepository, navigator)
 
     @Test
     fun `loads persisted stats into state`() = runTest {
@@ -74,26 +74,14 @@ class ProfileViewModelTest {
     }
 
     @Test
-    fun `quiet hours load from preferences and steppers persist with wrap`() = runTest {
-        val repo = FakePreferencesRepository()
+    fun `gear button navigates to settings`() = runTest {
+        val navigator = FakeNavigator()
 
-        viewModel(preferencesRepository = repo).test(this) {
+        viewModel(navigator = navigator).test(this) {
             expectInitialState()
-            runOnCreate()
+            containerHost.handleProfileIntent(ProfileIntent.OpenSettings)
 
-            // Defaults surface from preferences (22 → 7).
-            awaitUntil { it.quietHoursStart == 22 && it.quietHoursEnd == 7 }
-
-            // 22 + 3 wraps past midnight to 1.
-            containerHost.handleProfileIntent(ProfileIntent.AdjustQuietHoursStart(+3))
-            val wrapped = awaitUntil { it.quietHoursStart == 1 }
-            assertEquals("persisted, not just local state", 1, repo.preferencesFlow.value.quietHoursStartHour)
-            assertEquals(7, wrapped.quietHoursEnd)
-
-            // 7 − 8 wraps backwards to 23.
-            containerHost.handleProfileIntent(ProfileIntent.AdjustQuietHoursEnd(-8))
-            awaitUntil { it.quietHoursEnd == 23 }
-            assertEquals(23, repo.preferencesFlow.value.quietHoursEndHour)
+            assertEquals(NavEvent.Navigate(SettingsDestination), navigator.events.first())
 
             cancelAndIgnoreRemainingItems()
         }

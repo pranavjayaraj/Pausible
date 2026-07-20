@@ -10,8 +10,11 @@ data class HomePreferences(
     /** Sense quiet hours — the engine never prompts (wind-down excepted) inside
      *  [quietHoursStartHour, quietHoursEndHour); wraps midnight. Distinct from
      *  the reminder window above, which is when the reminder chain fires. */
+    val quietHoursEnabled: Boolean = true,
     val quietHoursStartHour: Int = DEFAULT_QUIET_HOURS_START,
     val quietHoursEndHour: Int = DEFAULT_QUIET_HOURS_END,
+    /** Master switch for the app's chimes and haptic feedback. */
+    val soundsEnabled: Boolean = true,
 ) {
     companion object {
         /** The Meditate hero card's preset interval, per the design. */

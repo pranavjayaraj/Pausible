@@ -44,6 +44,15 @@ class SenseBreakCoordinator @Inject constructor(
         }
     }
 
+    /**
+     * Host reached the foreground. Under the CLICK_IS_SUCCESS launch policy a
+     * recent pending prompt is credited as OPENED_APP retention — the
+     * notification worked even without a tap. Call from MainActivity.onResume.
+     */
+    suspend fun onHostOpened() {
+        decisionLog.resolveAppOpenOutcomes(System.currentTimeMillis())
+    }
+
     /** Maps the prompt's break type onto a typed session route; arms completion tracking. */
     fun destinationFor(breakTypeName: String?, decisionId: Long): SessionDestination {
         pendingDecisionId.set(decisionId)

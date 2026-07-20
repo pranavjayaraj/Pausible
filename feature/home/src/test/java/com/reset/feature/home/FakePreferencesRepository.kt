@@ -44,4 +44,12 @@ class FakePreferencesRepository(
     override suspend fun setQuietHoursEnd(hour: Int) {
         preferencesFlow.value = preferencesFlow.value.copy(quietHoursEndHour = hour)
     }
+
+    override suspend fun setQuietHoursEnabled(enabled: Boolean) {
+        preferencesFlow.value = preferencesFlow.value.copy(quietHoursEnabled = enabled)
+    }
+
+    override suspend fun setSoundsEnabled(enabled: Boolean) {
+        preferencesFlow.value = preferencesFlow.value.copy(soundsEnabled = enabled)
+    }
 }

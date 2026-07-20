@@ -46,8 +46,16 @@ class SenseDecisionLog @Inject constructor(
         ),
     )
 
-    suspend fun recordAccepted(decisionId: Long, nowMs: Long) =
-        recordTerminal(decisionId, nowMs) { _ -> PromptOutcome.ACCEPTED }
+    suspend fun recordAccepted(decisionId: Long, nowMs: Long) {
+        val row = dao.byId(decisionId) ?: return
+        // First response wins — with one exception: the tap itself opens the
+        // app, so host onResume can write the inferred OPENED_APP a moment
+        // before the receiver's ACCEPTED lands. The explicit tap is the more
+        // specific fact and refines the inference.
+        if (row.outcomeEnum.isTerminal && row.outcomeEnum != PromptOutcome.OPENED_APP) return
+        val delaySec = ((nowMs - row.timestampMs) / 1000L).toInt().coerceAtLeast(0)
+        dao.updateOutcome(decisionId, PromptOutcome.ACCEPTED.name, nowMs, delaySec)
+    }
 
     /** Dismissal splits into fast (hard negative) vs slow by [FAST_DISMISS_SEC]. */
     suspend fun recordDismissed(decisionId: Long, nowMs: Long) =
@@ -119,6 +127,29 @@ class SenseDecisionLog @Inject constructor(
         }
     }
 
+    /**
+     * App-open attribution (CLICK_IS_SUCCESS launch policy): the host reached
+     * the foreground while a shown prompt was still pending and recent —
+     * credit the prompt with [PromptOutcome.OPENED_APP]. The user came; the
+     * tap is just one of the doors. Call from the host's onResume.
+     *
+     * Explicit responses (tap / dismiss / snooze) always win over this
+     * inference, and WIND_DOWN prompts are excluded: their success is the
+     * screen going DARK — an app open at 1 AM is the opposite of that.
+     */
+    suspend fun resolveAppOpenOutcomes(nowMs: Long) {
+        if (!PromptOutcome.CLICK_IS_SUCCESS) return
+        for (row in dao.shownSince(nowMs - APP_OPEN_ATTRIBUTION_MS)) {
+            if (row.outcomeEnum.isTerminal || row.breakType == WIND_DOWN_TYPE) continue
+            dao.updateOutcome(
+                id = row.id,
+                outcome = PromptOutcome.OPENED_APP.name,
+                atMs = nowMs,
+                delaySec = ((nowMs - row.timestampMs) / 1000L).toInt(),
+            )
+        }
+    }
+
     /** Retention sweep — the log is training data, not a diary. */
     suspend fun purgeOldRows(nowMs: Long, retentionMs: Long = RETENTION_MS) {
         dao.purgeOlderThan(nowMs - retentionMs)
@@ -158,18 +189,41 @@ class SenseDecisionLog @Inject constructor(
         val monthLabeled = monthRows.filter { it.outcomeEnum.isTerminal }
         val delays = monthLabeled.mapNotNull { it.responseDelaySec }
 
+        // Empirical-Bayes shrinkage (SENSE_ML.md §8.6 stage 2): sparse buckets
+        // read near their prior instead of swinging on a handful of outcomes.
+        // The per-hour rate shrinks toward the user's overall rate, which
+        // itself shrinks toward the population prior — "2 of 3 accepted at
+        // 14:00" reads ~0.55, not 0.67.
+        val overallAcceptRate = shrunkRate(
+            successes = monthLabeled.count { it.outcomeEnum.isPositive },
+            n = monthLabeled.size,
+            prior = COLD_START_RATE,
+        )
+
         return ResponseHistory(
-            minutesSinceLastCompletedBreak = dao.lastCompletedBreakAtMs()
+            // "Completed" here means SUCCESS under the current policy — a tap
+            // while PromptOutcome.CLICK_IS_SUCCESS is on (cooldown starts on
+            // tap; earned trust counts taps).
+            minutesSinceLastCompletedBreak = dao.lastSuccessAtMs(PromptOutcome.successNames())
                 ?.let { ((nowMs - it) / 60_000L).toInt() } ?: Int.MAX_VALUE,
             dismissCount24h = dayOutcomes.count {
                 it.outcomeEnum == PromptOutcome.DISMISSED_FAST ||
                     it.outcomeEnum == PromptOutcome.DISMISSED_SLOW
             },
             snoozeCount24h = dayOutcomes.count { it.outcomeEnum == PromptOutcome.SNOOZED },
-            acceptRate7d = rate(weekLabeled) { it.outcomeEnum.isPositive },
-            acceptRateThisHour = rate(hourLabeled) { it.outcomeEnum.isPositive },
+            acceptRate7d = shrunkRate(
+                successes = weekLabeled.count { it.outcomeEnum.isPositive },
+                n = weekLabeled.size,
+                prior = overallAcceptRate,
+            ),
+            acceptRateThisHour = shrunkRate(
+                successes = hourLabeled.count { it.outcomeEnum.isPositive },
+                n = hourLabeled.size,
+                prior = overallAcceptRate,
+            ),
+            acceptRateThisHourRaw = rate(hourLabeled) { it.outcomeEnum.isPositive },
             avgResponseDelaySec = if (delays.isEmpty()) 60f else delays.average().toFloat(),
-            breakCompletionRate = rate(monthLabeled) { it.outcomeEnum == PromptOutcome.COMPLETED },
+            breakCompletionRate = rate(monthLabeled) { it.outcomeEnum.isSuccess },
             labeledOutcomeCount = dao.labeledOutcomeCount(),
             promptsShownThisHourHistoric = hourRows.size,
         )
@@ -199,13 +253,20 @@ class SenseDecisionLog @Inject constructor(
         }
 
     private fun rate(rows: List<DecisionEntity>, predicate: (DecisionEntity) -> Boolean): Float =
-        if (rows.isEmpty()) 0.5f else rows.count(predicate).toFloat() / rows.size
+        if (rows.isEmpty()) COLD_START_RATE else rows.count(predicate).toFloat() / rows.size
+
+    /** Beta-style shrinkage: [PRIOR_STRENGTH] pseudo-observations at [prior]. */
+    private fun shrunkRate(successes: Int, n: Int, prior: Float): Float =
+        (successes + PRIOR_STRENGTH * prior) / (n + PRIOR_STRENGTH)
 
     private companion object {
+        const val COLD_START_RATE = 0.5f
+        const val PRIOR_STRENGTH = 5f
         const val FAST_DISMISS_SEC = 5
         const val IGNORE_TIMEOUT_MS = 30 * 60 * 1000L
         const val WIND_DOWN_TYPE = "WIND_DOWN" // BreakType.WIND_DOWN.name
         const val WIND_DOWN_SUCCESS_WINDOW_MS = 10 * 60 * 1000L
+        const val APP_OPEN_ATTRIBUTION_MS = 10 * 60 * 1000L
         const val ONE_DAY_MS = 24 * 60 * 60 * 1000L
         const val SEVEN_DAYS_MS = 7 * ONE_DAY_MS
         const val THIRTY_DAYS_MS = 30 * ONE_DAY_MS

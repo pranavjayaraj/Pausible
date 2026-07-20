@@ -14,9 +14,9 @@ class UsageWindowAggregatorTest {
     private val now = 10 * 60 * 60 * 1000L // 10:00 into the day, arbitrary epoch base
     private val categories = mapOf(
         "work.app" to AppCategory.WORK,
-        "social.app" to AppCategory.SOCIAL,
-        "chat.app" to AppCategory.CHAT,
-        "video.app" to AppCategory.VIDEO,
+        "social.app" to AppCategory.SOCIAL_FEED,
+        "chat.app" to AppCategory.MESSAGING,
+        "video.app" to AppCategory.STREAMING,
     )
 
     private fun categoryOf(pkg: String) = categories[pkg] ?: AppCategory.OTHER
@@ -58,7 +58,7 @@ class UsageWindowAggregatorTest {
         val usage = aggregator.aggregate(events, now, ::categoryOf).usage
         assertEquals("work→chat + chat→social", 2, usage.appSwitchCount)
         assertEquals(3, usage.uniqueAppCount)
-        assertEquals(AppCategory.SOCIAL, usage.foregroundCategory)
+        assertEquals(AppCategory.SOCIAL_FEED, usage.foregroundCategory)
     }
 
     @Test

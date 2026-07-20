@@ -99,7 +99,7 @@ class BreakDecisionEngineTest {
 
     /** Calm-but-borderline context: scores ≈0.385, just under BALANCED's 0.40 soft bar. */
     private fun borderlineInput() = deepFocusInput(
-        continuousScreenOnMin = 36,
+        continuousScreenOnMin = 22,
         appSwitchCount = 2,
         coldOpenCount = 0,
     ).let { it.copy(device = it.device.copy(charging = false)) }
@@ -216,7 +216,7 @@ class BreakDecisionEngineTest {
     @Test
     fun `mild night use stays below the wind-down threshold`() {
         // Long screen-on but calm usage (the default deep-focus profile at 23:00)
-        // scores ~0.42 — under the 0.55 wind-down bar. Awake ≠ automatically nudged.
+        // scores ~0.45 — under the 0.55 wind-down bar. Awake ≠ automatically nudged.
         val d = rulesOnlyEngine().decide(deepFocusInput(hour = 23))
         assertEquals(PromptAction.SUPPRESS, d.action)
         assertNull("scored suppression, not a gate", d.gateReason)
@@ -229,7 +229,7 @@ class BreakDecisionEngineTest {
             nightDoomscrollInput(
                 history = ResponseHistory(
                     minutesSinceLastCompletedBreak = 300,
-                    acceptRateThisHour = 0f,
+                    acceptRateThisHourRaw = 0f,
                     promptsShownThisHourHistoric = 8,
                 ),
             ),
@@ -265,7 +265,7 @@ class BreakDecisionEngineTest {
             deepFocusInput(
                 history = ResponseHistory(
                     minutesSinceLastCompletedBreak = 180,
-                    acceptRateThisHour = 0.0f,
+                    acceptRateThisHourRaw = 0.0f,
                     promptsShownThisHourHistoric = 8,
                 ),
             ),
@@ -297,6 +297,29 @@ class BreakDecisionEngineTest {
         val mature = engine.decide(deepFocusInput(history = ResponseHistory(minutesSinceLastCompletedBreak = 180, labeledOutcomeCount = 400)))
         assertEquals("mature user runs at max alpha", 0.7f, mature.modelAlpha, 1e-6f)
         assertNotNull(mature.modelScore)
+    }
+
+    @Test
+    fun `receptive hours score higher than averse ones`() {
+        // The per-hour receptivity term reads the EB-shrunk rate; at the 0.5
+        // cold-start prior it contributes exactly zero.
+        val neutral = rulesOnlyEngine().decide(deepFocusInput()).ruleScore
+        val receptive = rulesOnlyEngine().decide(
+            deepFocusInput(history = ResponseHistory(minutesSinceLastCompletedBreak = 180, acceptRateThisHour = 0.9f)),
+        ).ruleScore
+        val averse = rulesOnlyEngine().decide(
+            deepFocusInput(history = ResponseHistory(minutesSinceLastCompletedBreak = 180, acceptRateThisHour = 0.1f)),
+        ).ruleScore
+        assertTrue("good hours score above the prior", receptive > neutral)
+        assertTrue("bad hours score below the prior", averse < neutral)
+    }
+
+    @Test
+    fun `focus pressure saturates instead of growing linearly`() {
+        fun scoreAt(min: Int) = rulesOnlyEngine().decide(deepFocusInput(continuousScreenOnMin = min)).ruleScore
+        val earlyGain = scoreAt(30) - scoreAt(15)
+        val lateGain = scoreAt(60) - scoreAt(45)
+        assertTrue("minute 15→30 must matter more than 45→60", earlyGain > lateGain)
     }
 
     @Test

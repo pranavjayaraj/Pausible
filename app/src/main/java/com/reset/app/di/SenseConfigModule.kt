@@ -27,7 +27,14 @@ internal object SenseConfigModule {
             val prefs = preferencesRepository.preferences.first()
             QuietHours(
                 startHour = prefs.quietHoursStartHour,
-                endHour = prefs.quietHoursEndHour,
+                // start == end is an empty window (the engine's quiet check never
+                // matches), so a disabled toggle erases quiet hours without the
+                // sense modules needing an enabled flag of their own.
+                endHour = if (prefs.quietHoursEnabled) {
+                    prefs.quietHoursEndHour
+                } else {
+                    prefs.quietHoursStartHour
+                },
             )
         }
 }

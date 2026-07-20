@@ -9,6 +9,8 @@ android {
 dependencies {
     implementation(project(":model"))
     implementation(project(":navigation"))
+    // Cross-feature navigation targets only the destination contract, never the feature impl.
+    implementation(project(":feature:settings:api"))
     implementation(libs.coroutines.core)
     implementation(libs.androidx.lifecycle.runtimeCompose)
     implementation(libs.androidx.compose.activity)

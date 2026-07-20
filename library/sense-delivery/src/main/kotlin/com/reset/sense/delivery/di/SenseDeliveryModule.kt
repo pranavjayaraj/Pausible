@@ -6,6 +6,7 @@ import com.reset.sense.delivery.AndroidSnapshotSource
 import com.reset.sense.delivery.AssetModelLoader
 import com.reset.sense.delivery.BreakPresenter
 import com.reset.sense.delivery.HostStateSource
+import com.reset.sense.delivery.SenseDeliveryConstants
 import com.reset.sense.delivery.SnapshotSource
 import com.reset.sense.ml.BreakDecisionEngine
 import com.reset.sense.ml.SenseMode
@@ -38,7 +39,9 @@ internal abstract class SenseDeliveryModule {
         @Singleton
         fun provideBreakDecisionEngine(modelLoader: AssetModelLoader): BreakDecisionEngine =
             BreakDecisionEngine(
-                model = modelLoader.loadOrNull(), // null → rules-only, by design
+                // null → rules-only, by design. MODEL_ENABLED is false at
+                // launch (see its kdoc); the engine natively degrades.
+                model = if (SenseDeliveryConstants.MODEL_ENABLED) modelLoader.loadOrNull() else null,
                 mode = SenseMode.BALANCED,
                 // DORMANT: raise to ~0.05 once the user base is large enough
                 // to spread the exploration tax thin (see SENSE_ML.md §8.6).

@@ -49,8 +49,8 @@ class SenseEvaluatorTest {
             if (i >= 0) rows[i] = rows[i].copy(outcome = outcome, outcomeAtMs = atMs, responseDelaySec = delaySec)
         }
 
-        override suspend fun lastCompletedBreakAtMs() =
-            rows.filter { it.outcome == PromptOutcome.COMPLETED.name }.mapNotNull { it.outcomeAtMs }.maxOrNull()
+        override suspend fun lastSuccessAtMs(successOutcomes: List<String>) =
+            rows.filter { it.outcome in successOutcomes }.mapNotNull { it.outcomeAtMs }.maxOrNull()
 
         override suspend fun labeledOutcomeCount() =
             rows.count {
@@ -70,6 +70,9 @@ class SenseEvaluatorTest {
             rows.removeAll { it.timestampMs < cutoffMs }
             return before - rows.size
         }
+
+        override suspend fun recent(limit: Int) =
+            rows.sortedByDescending { it.timestampMs }.take(limit)
     }
 
     private class FakePresenter(
@@ -218,18 +221,20 @@ class SenseEvaluatorTest {
     @Test
     fun `daily cap ends prompting for the day`() = runTest {
         val (dao, presenter, evaluator) = evaluator()
-        // 3 prompts already shown today (cap = 3).
+        // 3 prompts already shown today (cap = 3). Outcomes land > 20 min ago:
+        // under CLICK_IS_SUCCESS a tap starts the cooldown, and this test is
+        // about the daily cap, not the cooldown gate.
         repeat(3) {
             dao.insert(
                 DecisionEntity(
-                    timestampMs = noonTuesday - (it + 1) * 60_000L,
+                    timestampMs = noonTuesday - (it + 2) * 60 * 60_000L,
                     hourOfDay = 10,
                     action = PromptAction.FULL_PROMPT.name,
                     breakType = "STRETCH",
                     blendedScore = 0.7f, ruleScore = 0.7f, modelScore = null,
                     modelAlpha = 0f, gateReason = null,
                     featuresCsv = "0.5", outcome = PromptOutcome.ACCEPTED.name,
-                    outcomeAtMs = noonTuesday, responseDelaySec = 5,
+                    outcomeAtMs = noonTuesday - (it + 2) * 60 * 60_000L, responseDelaySec = 5,
                 ),
             )
         }
@@ -362,16 +367,19 @@ class SenseEvaluatorTest {
         val (dao, _, evaluator) = evaluator(model = AcceptanceModel.fromJson(json))
         // Give the user enough labeled history to ramp α above zero.
         repeat(250) {
+            val at = noonTuesday - 40L * 24 * 60 * 60_000L // outside 30d stats
             dao.insert(
                 DecisionEntity(
-                    timestampMs = noonTuesday - 40L * 24 * 60 * 60_000L, // outside 30d stats
+                    timestampMs = at,
                     hourOfDay = 10,
                     action = PromptAction.FULL_PROMPT.name,
                     breakType = "STRETCH",
                     blendedScore = 0.5f, ruleScore = 0.5f, modelScore = null,
                     modelAlpha = 0f, gateReason = null, featuresCsv = null,
                     outcome = PromptOutcome.ACCEPTED.name,
-                    outcomeAtMs = noonTuesday, responseDelaySec = 5,
+                    // Old outcome times too: under CLICK_IS_SUCCESS a recent
+                    // tap would trip the cooldown gate and mask the α check.
+                    outcomeAtMs = at + 5_000, responseDelaySec = 5,
                 ),
             )
         }

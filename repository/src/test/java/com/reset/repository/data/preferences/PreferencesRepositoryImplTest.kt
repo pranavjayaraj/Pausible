@@ -36,6 +36,21 @@ class PreferencesRepositoryImplTest {
     }
 
     @Test
+    fun `quiet hours and sounds default on, persist off`() = runTest {
+        val repo = repository()
+        val defaults = repo.preferences.first()
+        assertTrue(defaults.quietHoursEnabled)
+        assertTrue(defaults.soundsEnabled)
+
+        repo.setQuietHoursEnabled(false)
+        repo.setSoundsEnabled(false)
+
+        val prefs = repo.preferences.first()
+        assertFalse(prefs.quietHoursEnabled)
+        assertFalse(prefs.soundsEnabled)
+    }
+
+    @Test
     fun `persists duration and reminder preference`() = runTest {
         val repo = repository()
 

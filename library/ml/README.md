@@ -6,6 +6,11 @@ and exports it for the pure-Kotlin inference runtime in `:sense-ml`.
 > Full system documentation (architecture, decision flow, label rules,
 > modification checklists): [`docs/SENSE_ML.md`](../../docs/SENSE_ML.md).
 
+> **Status: the app currently ships rules-only** — the exported artifact is
+> bundled but not loaded (`SenseDeliveryConstants.MODEL_ENABLED = false`).
+> This pipeline stays as-is for the real-data retrain that re-enables it
+> (SENSE_ML.md §5 "Launch status" and §8.6 stages 3–5).
+
 ## Layout
 
 | File | Role |

@@ -4,6 +4,17 @@ import com.reset.sense.ml.BreakType
 
 object SenseDeliveryConstants {
 
+    /**
+     * Launch configuration: rules-only. The bundled model was trained purely
+     * on the simulator (`ml/bootstrap_data.py`), so it can only re-learn the
+     * hand-designed receptivity formula — and the α ramp kept it near-inert
+     * for a user's first ~2 months anyway. Flip to true only after a
+     * real-data retrain passes the ship gate AND off-policy evaluation
+     * (SENSE_ML.md §8.6 stages 3–5). Everything the future model needs —
+     * decision log, labels, propensity trail — is still recorded while false.
+     */
+    const val MODEL_ENABLED = false
+
     const val CHANNEL_ID = "sense_breaks"
     const val CHANNEL_NAME = "Reset breaks"
     const val CHANNEL_DESCRIPTION = "Well-timed suggestions for short resets"

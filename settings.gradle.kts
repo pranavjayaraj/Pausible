@@ -30,6 +30,8 @@ include(":feature:profile")
 include(":feature:profile:api")
 include(":feature:mood")
 include(":feature:mood:api")
+include(":feature:settings")
+include(":feature:settings:api")
 include(":model")
 include(":repository")
 // The Sense ML system lives under library/ (SDK-extractable; see docs/SENSE_ML.md).

@@ -5,10 +5,12 @@ import android.media.ToneGenerator
 import android.util.Log
 import com.reset.model.domain.SoundController
 import com.reset.model.domain.model.ChimeKind
+import com.reset.model.domain.preferences.PreferencesRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,12 +23,17 @@ import javax.inject.Inject
  * for a second or more on some devices, and this is called from the UI side-effect
  * handler — blocking there would stall in-flight animations (e.g. the leave spin).
  */
-class AndroidSoundController @Inject constructor() : SoundController {
+class AndroidSoundController @Inject constructor(
+    private val preferencesRepository: PreferencesRepository,
+) : SoundController {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun playChime(kind: ChimeKind) {
         scope.launch {
+            // Every chime funnels through here, so the Settings "Sounds & haptics"
+            // switch is honoured in one place rather than at each call site.
+            if (!preferencesRepository.preferences.first().soundsEnabled) return@launch
             runCatching {
                 val tone = when (kind) {
                     ChimeKind.Start -> ToneGenerator.TONE_PROP_BEEP

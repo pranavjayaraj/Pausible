@@ -1,5 +1,6 @@
 package com.reset.sense.ml
 
+import com.reset.sense.ml.FeatureSchema.IDX_ACCEPT_RATE_THIS_HOUR
 import com.reset.sense.ml.FeatureSchema.IDX_ACTIVITY_FIRST
 import com.reset.sense.ml.FeatureSchema.IDX_APP_SWITCH_COUNT
 import com.reset.sense.ml.FeatureSchema.IDX_CHARGING
@@ -111,21 +112,28 @@ class RulesEngine(
 
     private fun isDeadHour(input: DecisionInput): Boolean =
         input.history.promptsShownThisHourHistoric >= deadHourMinPrompts &&
-            input.history.acceptRateThisHour < deadHourMaxAcceptRate
+            input.history.acceptRateThisHourRaw < deadHourMaxAcceptRate
 
     /**
      * Interpretable 0..1 receptivity score over the normalized feature vector.
      * MUST stay in sync with `rules_baseline_score()` in ml/train.py.
+     *
+     * Focus pressure saturates (`f·(2−f)`): the 30th minute of screen-on says
+     * more than the 60th. The per-hour receptivity term is centered on the
+     * 0.5 cold-start prior, so a fresh user gets exactly zero from it; it
+     * reads the EB-shrunk rate, so a lucky 2-of-3 hour barely moves it.
      */
     fun score(f: FloatArray): Float {
         val still = f[IDX_ACTIVITY_FIRST] // one-hot slot 0 = STILL
+        val focus = f[IDX_CONTINUOUS_SCREEN_ON]
         val raw = (
-            0.40f * f[IDX_CONTINUOUS_SCREEN_ON] +
+            0.40f * focus * (2f - focus) +
                 0.20f * f[IDX_APP_SWITCH_COUNT] +
                 0.15f * f[IDX_MINUTES_IN_ACTIVITY] * still +
                 0.10f * f[IDX_DISTRACTING_RETURNS] +
                 0.10f * f[IDX_COLD_OPENS] +
-                0.05f * f[IDX_CHARGING] -
+                0.05f * f[IDX_CHARGING] +
+                0.15f * (2f * f[IDX_ACCEPT_RATE_THIS_HOUR] - 1f) -
                 0.30f * max(0f, 1f - f[IDX_MIN_SINCE_LAST_BREAK] * 4f) -
                 0.20f * f[IDX_DISMISS_24H] -
                 0.15f * f[IDX_LATE_NIGHT]

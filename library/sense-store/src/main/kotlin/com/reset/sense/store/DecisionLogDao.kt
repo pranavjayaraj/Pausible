@@ -34,11 +34,12 @@ interface DecisionLogDao {
     )
     suspend fun updateOutcome(id: Long, outcome: String, atMs: Long, delaySec: Int?)
 
-    /** Timestamp of the most recent completed break, if any. */
+    /** Timestamp of the most recent SUCCESS outcome, if any — callers pass
+     *  [PromptOutcome.successNames] so the success policy lives in one place. */
     @Query(
-        "SELECT MAX(outcomeAtMs) FROM decision_log WHERE outcome = 'COMPLETED'",
+        "SELECT MAX(outcomeAtMs) FROM decision_log WHERE outcome IN (:successOutcomes)",
     )
-    suspend fun lastCompletedBreakAtMs(): Long?
+    suspend fun lastSuccessAtMs(successOutcomes: List<String>): Long?
 
     /** All-time count of terminal outcomes — drives the rules→model α ramp. */
     @Query(
@@ -65,4 +66,10 @@ interface DecisionLogDao {
     /** Retention: drop rows older than [cutoffMs]. */
     @Query("DELETE FROM decision_log WHERE timestampMs < :cutoffMs")
     suspend fun purgeOlderThan(cutoffMs: Long): Int
+
+    /** Newest-first dump of every logged tick, SUPPRESS included — debug
+     *  tooling only (the Sense debug screen); nothing in the decision loop
+     *  reads this. */
+    @Query("SELECT * FROM decision_log ORDER BY timestampMs DESC LIMIT :limit")
+    suspend fun recent(limit: Int): List<DecisionEntity>
 }

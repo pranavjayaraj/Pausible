@@ -92,13 +92,14 @@ class SenseDecisionLogTest {
         assertEquals(Int.MAX_VALUE, history.minutesSinceLastCompletedBreak)
         assertEquals(0.5f, history.acceptRate7d, 0f)
         assertEquals(0.5f, history.acceptRateThisHour, 0f)
+        assertEquals(0.5f, history.acceptRateThisHourRaw, 0f)
         assertEquals(0.5f, history.breakCompletionRate, 0f)
         assertEquals(60f, history.avgResponseDelaySec, 0f)
         assertEquals(0, history.labeledOutcomeCount)
     }
 
     @Test
-    fun `accept rates split by week and hour buckets`() = runTest {
+    fun `accept rates split by week and hour buckets with EB shrinkage`() = runTest {
         // 2 prompts at hour 15: 1 accepted, 1 fast-dismissed.
         val a = log.logDecision(shownDecision(), features, t0, 15)
         log.recordAccepted(a, t0 + 10_000)
@@ -108,15 +109,20 @@ class SenseDecisionLogTest {
         val c = log.logDecision(shownDecision(), features, t0 + 2 * hour, 9)
         log.recordAccepted(c, t0 + 2 * hour + 5_000)
 
+        // Shrinkage (k = 5 pseudo-observations): overall = (2 + 2.5)/8 = 0.5625;
+        // each bucket shrinks toward overall, overall toward the 0.5 prior.
         val now = t0 + 3 * hour
         val h15 = log.responseHistory(now, hourOfDay = 15)
-        assertEquals(0.5f, h15.acceptRateThisHour, 1e-6f)
-        assertEquals("2 of 3 accepted overall this week", 2f / 3f, h15.acceptRate7d, 1e-6f)
+        assertEquals("1 of 2: (1 + 5·0.5625)/7", 0.544643f, h15.acceptRateThisHour, 1e-4f)
+        assertEquals("raw rate stays unshrunk for the dead-hour gate", 0.5f, h15.acceptRateThisHourRaw, 1e-6f)
+        assertEquals("2 of 3: (2 + 5·0.5625)/8", 0.601563f, h15.acceptRate7d, 1e-4f)
         assertEquals(2, h15.promptsShownThisHourHistoric)
         assertEquals(3, h15.labeledOutcomeCount)
 
+        // A perfect 1-of-1 hour reads ~0.64, not 1.0 — thin evidence stays humble.
         val h9 = log.responseHistory(now, hourOfDay = 9)
-        assertEquals(1.0f, h9.acceptRateThisHour, 1e-6f)
+        assertEquals("1 of 1: (1 + 5·0.5625)/6", 0.635417f, h9.acceptRateThisHour, 1e-4f)
+        assertEquals(1.0f, h9.acceptRateThisHourRaw, 1e-6f)
     }
 
     @Test
@@ -142,6 +148,17 @@ class SenseDecisionLogTest {
         assertEquals(45, history.minutesSinceLastCompletedBreak)
     }
 
+    @Test
+    fun `a tap alone counts as success under the launch policy`() = runTest {
+        // Cooldown and earned trust start from the TAP while CLICK_IS_SUCCESS
+        // is on — no host completion report needed.
+        val id = log.logDecision(shownDecision(), features, t0, 11)
+        log.recordAccepted(id, t0 + 10_000)
+        val history = log.responseHistory(t0 + 10_000 + 30 * minute, 12)
+        assertEquals(30, history.minutesSinceLastCompletedBreak)
+        assertEquals("tap counts toward the completion-rate stat", 1f, history.breakCompletionRate, 0f)
+    }
+
     // ------------------------------------------------------------ gates & training
 
     @Test
@@ -163,11 +180,13 @@ class SenseDecisionLogTest {
         assertEquals("only the labeled shown prompt exports", 1, rows.size)
         val (exportedFeatures, weight) = rows.single()
         assertEquals(34, exportedFeatures.size)
-        assertEquals("a bare tap is faint praise, not a full positive", 0.2f, weight, 0f)
+        // TEMPORARY click-success policy: a tap is a full positive. When
+        // CLICK_IS_SUCCESS flips back, this reverts to 0.2f (faint praise).
+        assertEquals(1.0f, weight, 0f)
     }
 
     @Test
-    fun `training weights encode completion over clicks`() = runTest {
+    fun `training weights follow the click-success launch policy`() = runTest {
         val completed = log.logDecision(shownDecision(), features, t0, 15)
         log.recordAccepted(completed, t0 + 5_000)
         log.recordCompleted(completed, t0 + 60_000)
@@ -179,12 +198,61 @@ class SenseDecisionLogTest {
         val weights = log.trainingRows().map { (_, weight) -> weight }
         assertEquals(listOf(1.0f, -1.0f, 0.1f), weights)
 
-        // The reward philosophy, as assertions: completing beats tapping,
-        // and a fast swat is the strongest negative we log.
-        assertTrue(PromptOutcome.COMPLETED.trainingWeight > PromptOutcome.ACCEPTED.trainingWeight)
+        // Launch policy: taps count as full success (CLICK_IS_SUCCESS).
+        // Completion still never ranks BELOW a tap, and the negatives keep
+        // their hierarchy regardless of the policy flag.
+        assertTrue(PromptOutcome.CLICK_IS_SUCCESS)
+        assertTrue(PromptOutcome.COMPLETED.trainingWeight >= PromptOutcome.ACCEPTED.trainingWeight)
+        assertTrue(PromptOutcome.ACCEPTED.isSuccess)
         assertTrue(PromptOutcome.DISMISSED_FAST.trainingWeight < PromptOutcome.DISMISSED_SLOW.trainingWeight)
         assertTrue(PromptOutcome.SNOOZED.trainingWeight > 0f)
+        assertTrue("snooze is a timing signal, never a success", !PromptOutcome.SNOOZED.isSuccess)
         assertEquals("PENDING must never train", 0f, PromptOutcome.PENDING.trainingWeight, 0f)
+    }
+
+    // ------------------------------------------------------------ app-open attribution
+
+    @Test
+    fun `app open within the window resolves a pending prompt to OPENED_APP`() = runTest {
+        val id = log.logDecision(shownDecision(), features, t0, 15)
+        log.resolveAppOpenOutcomes(nowMs = t0 + 5 * minute)
+        val row = dao.byId(id)!!
+        assertEquals(PromptOutcome.OPENED_APP.name, row.outcome)
+        assertEquals("delay = prompt → app open", 300, row.responseDelaySec)
+        assertTrue("retention counts as success under the launch policy", row.outcomeEnum.isSuccess)
+    }
+
+    @Test
+    fun `app open outside the window leaves the prompt pending`() = runTest {
+        val id = log.logDecision(shownDecision(), features, t0, 15)
+        log.resolveAppOpenOutcomes(nowMs = t0 + 15 * minute) // window is 10 min
+        assertEquals(PromptOutcome.PENDING.name, dao.byId(id)!!.outcome)
+    }
+
+    @Test
+    fun `explicit responses beat the app-open inference in both orders`() = runTest {
+        // Dismissal first: the later open never overrides it.
+        val dismissed = log.logDecision(shownDecision(), features, t0, 15)
+        log.recordDismissed(dismissed, t0 + 2_000)
+        log.resolveAppOpenOutcomes(t0 + 3 * minute)
+        assertEquals(PromptOutcome.DISMISSED_FAST.name, dao.byId(dismissed)!!.outcome)
+
+        // Inference first: the racing tap (which itself opened the app)
+        // refines OPENED_APP to the more specific ACCEPTED.
+        val tapped = log.logDecision(shownDecision(), features, t0 + hour, 15)
+        log.resolveAppOpenOutcomes(t0 + hour + 10_000)
+        assertEquals(PromptOutcome.OPENED_APP.name, dao.byId(tapped)!!.outcome)
+        log.recordAccepted(tapped, t0 + hour + 12_000)
+        assertEquals(PromptOutcome.ACCEPTED.name, dao.byId(tapped)!!.outcome)
+    }
+
+    @Test
+    fun `wind-down prompts are never credited by an app open`() = runTest {
+        // A wind-down's success is the screen going DARK; opening the app at
+        // 1 AM is the opposite outcome.
+        val id = log.logDecision(windDownDecision(), features, t0, 1)
+        log.resolveAppOpenOutcomes(t0 + 5 * minute)
+        assertEquals(PromptOutcome.PENDING.name, dao.byId(id)!!.outcome)
     }
 
     // ------------------------------------------------------------ wind-down

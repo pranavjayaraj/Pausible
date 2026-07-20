@@ -28,8 +28,8 @@ class FakeDecisionLogDao : DecisionLogDao {
         }
     }
 
-    override suspend fun lastCompletedBreakAtMs(): Long? =
-        rows.filter { it.outcome == PromptOutcome.COMPLETED.name }
+    override suspend fun lastSuccessAtMs(successOutcomes: List<String>): Long? =
+        rows.filter { it.outcome in successOutcomes }
             .mapNotNull { it.outcomeAtMs }
             .maxOrNull()
 
@@ -54,4 +54,7 @@ class FakeDecisionLogDao : DecisionLogDao {
         rows.removeAll { it.timestampMs < cutoffMs }
         return before - rows.size
     }
+
+    override suspend fun recent(limit: Int): List<DecisionEntity> =
+        rows.sortedByDescending { it.timestampMs }.take(limit)
 }

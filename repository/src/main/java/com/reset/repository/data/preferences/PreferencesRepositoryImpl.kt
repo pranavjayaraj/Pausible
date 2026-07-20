@@ -23,8 +23,10 @@ class PreferencesRepositoryImpl @Inject constructor(
             remindersEveryMin = prefs[KEY_REMINDER_EVERY] ?: HomePreferences.DEFAULT_REMINDER_EVERY_MIN,
             remindersStartHour = prefs[KEY_REMINDER_START] ?: HomePreferences.DEFAULT_REMINDER_START_HOUR,
             remindersEndHour = prefs[KEY_REMINDER_END] ?: HomePreferences.DEFAULT_REMINDER_END_HOUR,
+            quietHoursEnabled = prefs[KEY_QUIET_ENABLED] ?: true,
             quietHoursStartHour = prefs[KEY_QUIET_START] ?: HomePreferences.DEFAULT_QUIET_HOURS_START,
             quietHoursEndHour = prefs[KEY_QUIET_END] ?: HomePreferences.DEFAULT_QUIET_HOURS_END,
+            soundsEnabled = prefs[KEY_SOUNDS_ENABLED] ?: true,
         )
     }
 
@@ -56,6 +58,14 @@ class PreferencesRepositoryImpl @Inject constructor(
         dataStore.edit { it[KEY_QUIET_END] = hour.coerceIn(0, 23) }
     }
 
+    override suspend fun setQuietHoursEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_QUIET_ENABLED] = enabled }
+    }
+
+    override suspend fun setSoundsEnabled(enabled: Boolean) {
+        dataStore.edit { it[KEY_SOUNDS_ENABLED] = enabled }
+    }
+
     private companion object {
         val KEY_DURATION = intPreferencesKey("duration_min")
         val KEY_REMINDERS_ENABLED = booleanPreferencesKey("reminders_enabled")
@@ -64,5 +74,7 @@ class PreferencesRepositoryImpl @Inject constructor(
         val KEY_REMINDER_END = intPreferencesKey("reminder_end_hour")
         val KEY_QUIET_START = intPreferencesKey("quiet_hours_start")
         val KEY_QUIET_END = intPreferencesKey("quiet_hours_end")
+        val KEY_QUIET_ENABLED = booleanPreferencesKey("quiet_hours_enabled")
+        val KEY_SOUNDS_ENABLED = booleanPreferencesKey("sounds_enabled")
     }
 }

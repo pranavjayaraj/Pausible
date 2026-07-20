@@ -1,11 +1,11 @@
-package com.reset.feature.profile
+package com.reset.feature.settings
 
-import com.reset.model.domain.preferences.PreferencesRepository
 import com.reset.model.domain.model.HomePreferences
+import com.reset.model.domain.preferences.PreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/** In-memory [PreferencesRepository] for Profile ViewModel tests. */
+/** In-memory [PreferencesRepository] for Settings ViewModel tests. */
 class FakePreferencesRepository : PreferencesRepository {
 
     val preferencesFlow = MutableStateFlow(HomePreferences())
@@ -38,5 +38,13 @@ class FakePreferencesRepository : PreferencesRepository {
 
     override suspend fun setQuietHoursEnd(hour: Int) {
         preferencesFlow.value = preferencesFlow.value.copy(quietHoursEndHour = hour)
+    }
+
+    override suspend fun setQuietHoursEnabled(enabled: Boolean) {
+        preferencesFlow.value = preferencesFlow.value.copy(quietHoursEnabled = enabled)
+    }
+
+    override suspend fun setSoundsEnabled(enabled: Boolean) {
+        preferencesFlow.value = preferencesFlow.value.copy(soundsEnabled = enabled)
     }
 }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+
+    <string name="settings_section_quiet_hours">QUIET HOURS</string>
+    <string name="settings_quiet_toggle_title">Enable Quiet Hours</string>
+    <string name="settings_quiet_toggle_subtitle">Pause reminders and notifications</string>
+    <string name="settings_quiet_toggle_a11y">Toggle quiet hours</string>
+    <string name="settings_quiet_starts">Starts</string>
+    <string name="settings_quiet_ends">Ends</string>
+    <string name="settings_quiet_summary_on">During quiet hours, reminders are silenced from %1$s to %2$s.</string>
+    <string name="settings_quiet_summary_off">During quiet hours, nothing is silenced — turn it on above.</string>
+
+    <string name="settings_section_notifications">NOTIFICATIONS</string>
+    <string name="settings_break_reminders">Break reminders</string>
+    <string name="settings_break_reminders_a11y">Toggle break reminders</string>
+    <string name="settings_sounds_haptics">Sounds &amp; haptics</string>
+    <string name="settings_sounds_haptics_a11y">Toggle sounds</string>
+</resources>

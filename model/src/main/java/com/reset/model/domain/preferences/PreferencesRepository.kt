@@ -26,4 +26,8 @@ interface PreferencesRepository {
     suspend fun setQuietHoursStart(hour: Int)
 
     suspend fun setQuietHoursEnd(hour: Int)
+
+    suspend fun setQuietHoursEnabled(enabled: Boolean)
+
+    suspend fun setSoundsEnabled(enabled: Boolean)
 }

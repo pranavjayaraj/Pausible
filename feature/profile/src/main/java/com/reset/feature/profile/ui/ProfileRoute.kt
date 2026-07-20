@@ -22,11 +22,6 @@ fun ProfileRoute() {
 
     ProfileScreen(
         state = state,
-        onAdjustQuietHoursStart = { delta ->
-            viewModel.handleProfileIntent(ProfileIntent.AdjustQuietHoursStart(delta))
-        },
-        onAdjustQuietHoursEnd = { delta ->
-            viewModel.handleProfileIntent(ProfileIntent.AdjustQuietHoursEnd(delta))
-        },
+        onOpenSettings = { viewModel.handleProfileIntent(ProfileIntent.OpenSettings) },
     )
 }

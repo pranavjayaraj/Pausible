@@ -16,15 +16,8 @@ data class ProfileState(
     val focusMinutesPerDay: List<Int> = List(WeeklyFocus.DAYS_PER_WEEK) { 0 },
     /** Index of today's bar — the highlighted one. */
     val todayIndex: Int = 0,
-    /** Sense quiet hours (24h clock, wraps midnight): no break prompts inside
-     *  the window, except the single silent night wind-down. */
-    val quietHoursStart: Int = QUIET_HOURS_START_DEFAULT,
-    val quietHoursEnd: Int = QUIET_HOURS_END_DEFAULT,
 ) {
     companion object {
-        const val QUIET_HOURS_START_DEFAULT = 22
-        const val QUIET_HOURS_END_DEFAULT = 7
-
         fun getDefault() = ProfileState()
     }
 }

@@ -233,3 +233,29 @@ fun AppleIcon(modifier: Modifier = Modifier, tint: Color = AppColors.textOnDark)
         drawPath(leaf, tint)
     }
 }
+
+/** Settings cog: hub circle with radiating teeth — the design's gear button glyph. */
+@Composable
+fun GearIcon(modifier: Modifier = Modifier, tint: Color = AppColors.ink) {
+    Canvas(modifier) {
+        val unit = size.minDimension / GRID
+        fun p(x: Float, y: Float) = Offset(x * unit, y * unit)
+        val strokeWidth = 2f * unit
+        drawCircle(tint, radius = 3.2f * unit, center = p(12f, 12f), style = Stroke(strokeWidth))
+        // Eight teeth: short spokes from the ring toward the rim, every 45°.
+        val inner = 6.4f
+        val outer = 9f
+        for (i in 0 until 8) {
+            val angle = Math.toRadians(i * 45.0)
+            val cos = kotlin.math.cos(angle).toFloat()
+            val sin = kotlin.math.sin(angle).toFloat()
+            drawLine(
+                tint,
+                p(12f + inner * cos, 12f + inner * sin),
+                p(12f + outer * cos, 12f + outer * sin),
+                strokeWidth,
+                StrokeCap.Round,
+            )
+        }
+    }
+}

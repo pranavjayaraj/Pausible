@@ -34,6 +34,8 @@ import com.reset.feature.profile.api.ProfileDestination
 import com.reset.feature.sessions.api.SessionDestination
 import com.reset.feature.sessions.api.SessionsDestination
 import com.reset.feature.sessions.ui.SessionRoute
+import com.reset.feature.settings.api.SettingsDestination
+import com.reset.feature.settings.ui.SettingsRoute
 import com.reset.model.domain.SoundController
 import com.reset.model.domain.StartupState
 import com.reset.navigation.Navigator
@@ -142,6 +144,8 @@ class MainActivity : ComponentActivity() {
 
                         composable<BuilderDestination> { BuilderRoute() }
 
+                        composable<SettingsDestination> { SettingsRoute() }
+
                         composable<OnboardingDestination> {
                             // On a fresh launch onboarding covers the dashboard before
                             // Home's load ever runs, so it owns the readiness signal:
@@ -158,9 +162,11 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // A Sense prompt still showing when the user opens the app is stale —
-        // they're here now. Clear the visual; the outcome row stays PENDING
-        // and the ignore sweep labels it honestly (organic open ≠ accepted).
+        // they're here now. Clear the visual; under the click-success launch
+        // policy the coordinator credits a recent pending prompt as
+        // OPENED_APP retention (an explicit tap still wins the race).
         breakPresenter.dismissCurrent()
+        lifecycleScope.launch { senseBreakCoordinator.onHostOpened() }
     }
 
     override fun onNewIntent(intent: Intent) {

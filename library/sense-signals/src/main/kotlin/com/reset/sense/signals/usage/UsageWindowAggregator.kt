@@ -57,7 +57,10 @@ class UsageWindowAggregator(
         val distractingVisits = HashMap<String, Int>()
         for (session in lookbackSessions) {
             val category = categoryOf(session.packageName)
-            if (category == AppCategory.SOCIAL || category == AppCategory.GAME_DATING || category == AppCategory.VIDEO) {
+            if (category == AppCategory.SOCIAL_FEED ||
+                category == AppCategory.REWARD_LOOP ||
+                category == AppCategory.STREAMING
+            ) {
                 distractingVisits.merge(session.packageName, 1, Int::plus)
             }
         }

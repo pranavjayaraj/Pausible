@@ -28,6 +28,8 @@ dependencies {
     implementation(project(":feature:profile:api"))
     implementation(project(":feature:mood"))
     implementation(project(":feature:mood:api"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:settings:api"))
     implementation(project(":model"))
     implementation(project(":repository"))
     // Sense: context-aware microbreak engine (tick scheduling, prompt deep-link

@@ -16,7 +16,7 @@ class FeatureBuilderTest {
         distractingReturnCount = 1,    // -> 0.2
         coldOpenCount = 5,             // -> 0.5
         unlockCountLastHour = 30,      // -> clipped 1.0
-        foregroundCategory = AppCategory.SOCIAL,
+        foregroundCategory = AppCategory.SOCIAL_FEED,
     )
     private val device = DeviceSnapshot(
         activityState = ActivityState.ON_FOOT,
