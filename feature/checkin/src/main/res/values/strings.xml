@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Chip grid -->
+    <string name="checkin_title">What\'s going on?</string>
+    <string name="checkin_subtitle">No wrong answers. One tap.</string>
+    <string name="checkin_just_browsing">just browsing</string>
+    <string name="checkin_heard">Heard. Finding your minute…</string>
+    <string name="checkin_sense_caption">Sprout\'s guess — you\'ve been sitting a while. Yours to change.</string>
+
+    <string name="checkin_chip_stressed">Stressed</string>
+    <string name="checkin_chip_cant_focus">Can\'t focus</string>
+    <string name="checkin_chip_no_energy">No energy</string>
+    <string name="checkin_chip_feeling_low">Feeling low</string>
+    <string name="checkin_chip_stiff_achy">Stiff / achy</string>
+    <string name="checkin_chip_wrists_tired">Wrists tired</string>
+    <string name="checkin_chip_eyes_tired">Eyes tired</string>
+    <string name="checkin_chip_overthinking">Overthinking</string>
+    <string name="checkin_chip_overwhelmed">Overwhelmed</string>
+    <string name="checkin_chip_feeling_disconnected">Feeling disconnected</string>
+    <string name="checkin_chip_cant_switch_off">Can\'t switch off</string>
+    <string name="checkin_chip_been_sitting_forever">Been sitting forever</string>
+
+    <!-- Follow-up -->
+    <string name="checkin_followup_wound_up_title">More wound-up, or more worn-out?</string>
+    <string name="checkin_followup_wound_up_label">Wound-up</string>
+    <string name="checkin_followup_wound_up_sub">buzzing, tight, racing</string>
+    <string name="checkin_followup_worn_out_label">Worn-out</string>
+    <string name="checkin_followup_worn_out_sub">heavy, drained, flat</string>
+
+    <string name="checkin_followup_body_title">Neck &amp; shoulders, or wrists &amp; hands?</string>
+    <string name="checkin_followup_neck_label">Neck &amp; shoulders</string>
+    <string name="checkin_followup_neck_sub">tight, hunched, sore</string>
+    <string name="checkin_followup_wrists_label">Wrists &amp; hands</string>
+    <string name="checkin_followup_wrists_sub">stiff, cramped, tired</string>
+
+    <!-- Offer -->
+    <string name="checkin_offer_for">FOR %1$s</string>
+    <string name="checkin_offer_duration_seconds">%1$d seconds</string>
+    <string name="checkin_offer_duration_minutes">%1$d minutes</string>
+    <string name="checkin_offer_start">Start now</string>
+    <string name="checkin_offer_not_it">Not it? Try %1$s instead</string>
+    <string name="checkin_offer_support">Need support now?</string>
+
+    <!-- Support resources -->
+    <string name="checkin_support_title">You don\'t have to carry this alone</string>
+    <string name="checkin_support_body">This app isn\'t a treatment or a crisis service — it\'s a place for a minute of quiet. If things feel like more than a minute can hold, a real person can help.</string>
+    <string name="checkin_support_lifeline_title">988 Suicide &amp; Crisis Lifeline (US)</string>
+    <string name="checkin_support_lifeline_body">Call or text 988, any time, for any kind of crisis — not just suicide.</string>
+    <string name="checkin_support_elsewhere_title">Outside the US</string>
+    <string name="checkin_support_elsewhere_body">Your local emergency number, or a search for \"crisis line\" plus your country, will connect you to the nearest service.</string>
+    <string name="checkin_support_back">Back to check-in</string>
+
+    <!-- NeedState display labels (eyebrow "FOR X" + follow-up context) -->
+    <string name="checkin_need_body_tension">BODY TENSION</string>
+    <string name="checkin_need_hand_strain">HAND STRAIN</string>
+    <string name="checkin_need_eye_strain">EYE STRAIN</string>
+    <string name="checkin_need_wound_up">WOUND-UP</string>
+    <string name="checkin_need_scattered">SCATTERED</string>
+    <string name="checkin_need_drained">DRAINED</string>
+    <string name="checkin_need_low_mood">FEELING LOW</string>
+    <string name="checkin_need_stuck_on_a_thought">A STUCK THOUGHT</string>
+    <string name="checkin_need_restless">RESTLESS</string>
+    <string name="checkin_need_cant_wind_down">CAN\'T WIND DOWN</string>
+    <string name="checkin_need_overwhelmed">OVERWHELMED</string>
+    <string name="checkin_need_disconnected">FEELING DISCONNECTED</string>
+</resources>

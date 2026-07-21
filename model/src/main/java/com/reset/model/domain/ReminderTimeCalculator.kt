@@ -45,7 +45,9 @@ object ReminderTimeCalculator {
         }
     }
 
-    /** True when [nowMillis] falls inside the `[startHour, endHour)` daily window. */
+    /** True when [nowMillis] falls inside the `[startHour, endHour)` daily window —
+     *  including a window that wraps midnight (`startHour > endHour`, e.g. quiet hours'
+     *  default 22..7), where membership is the union of "after start" and "before end". */
     fun isWithinWindow(
         nowMillis: Long,
         startHour: Int,
@@ -61,6 +63,10 @@ object ReminderTimeCalculator {
         }
         val windowStart = dayStart.timeInMillis + TimeUnit.HOURS.toMillis(startHour.toLong())
         val windowEnd = dayStart.timeInMillis + TimeUnit.HOURS.toMillis(endHour.toLong())
-        return nowMillis in windowStart until windowEnd
+        return if (startHour <= endHour) {
+            nowMillis in windowStart until windowEnd
+        } else {
+            nowMillis >= windowStart || nowMillis < windowEnd
+        }
     }
 }

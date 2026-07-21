@@ -29,6 +29,11 @@ class StatsRepositoryImpl @Inject constructor(
         )
     }
 
+    override val todayBreaksTaken: Flow<Int> = dataStore.data.map { prefs ->
+        val today = timeProvider.todayEpochDay()
+        if (prefs[KEY_TODAY_BREAKS_DAY] == today) prefs[KEY_TODAY_BREAKS] ?: 0 else 0
+    }
+
     override val weeklyFocus: Flow<WeeklyFocus> = dataStore.data.map { prefs ->
         val today = timeProvider.todayEpochDay()
         WeeklyFocus(
@@ -60,6 +65,9 @@ class StatsRepositoryImpl @Inject constructor(
         val today = timeProvider.todayEpochDay()
         dataStore.edit { prefs ->
             prefs[KEY_BREAKS] = (prefs[KEY_BREAKS] ?: 0) + 1
+            val sameDay = prefs[KEY_TODAY_BREAKS_DAY] == today
+            prefs[KEY_TODAY_BREAKS] = (if (sameDay) prefs[KEY_TODAY_BREAKS] ?: 0 else 0) + 1
+            prefs[KEY_TODAY_BREAKS_DAY] = today
             prefs.touchStreak(today)
         }
     }
@@ -82,6 +90,8 @@ class StatsRepositoryImpl @Inject constructor(
         val KEY_TOTAL_MIN = intPreferencesKey("total_min")
         val KEY_STREAK = intPreferencesKey("streak")
         val KEY_BREAKS = intPreferencesKey("breaks_taken")
+        val KEY_TODAY_BREAKS = intPreferencesKey("breaks_taken_today")
+        val KEY_TODAY_BREAKS_DAY = longPreferencesKey("breaks_taken_today_epoch_day")
         val KEY_LAST_ACTIVE_DAY = longPreferencesKey("last_active_epoch_day")
 
         fun keyBucketMin(dayIndex: Int) = intPreferencesKey("focus_min_day_$dayIndex")

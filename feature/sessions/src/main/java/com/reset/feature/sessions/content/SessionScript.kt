@@ -97,6 +97,83 @@ sealed interface GuideStep {
     ) : GuideStep {
         override val durationSec: Int get() = dwellSec
     }
+
+    /**
+     * A framed hand-off to an external action (Reach Out's "send warmth"). The player
+     * shows [prompt] + a launch button for [dwellSec] before/while the actual Intent is
+     * built and fired by the app host — never by the ViewModel (see the leak-safe
+     * activity-launching rule). Completion is the Intent launching, not a response.
+     */
+    @Stable
+    data class LaunchAction(
+        val prompt: CopyPool,
+        val actionKind: ActionKind,
+        val dwellSec: Int,
+    ) : GuideStep {
+        override val durationSec: Int get() = dwellSec
+    }
+}
+
+/** What [GuideStep.LaunchAction] hands off to the app host. */
+enum class ActionKind {
+    MESSAGE,
+    CALL,
+}
+
+/** The line to show while this step is active, deterministically pool-rotated. */
+fun GuideStep.copyLine(seed: Int, completedCount: Int): String = when (this) {
+    is GuideStep.Breath -> cue.pick(seed, completedCount)
+    is GuideStep.Move -> instruction.pick(seed, completedCount)
+    is GuideStep.Prompt -> text.pick(seed, completedCount)
+    is GuideStep.LaunchAction -> prompt.pick(seed, completedCount)
+}
+
+/** Whether the screen should dim toward black while this step runs. Breath steps are
+ *  always eyes-closed (the audio/haptic pivot); Prompt opts in per instance. */
+val GuideStep.isDimmed: Boolean
+    get() = when (this) {
+        is GuideStep.Breath -> true
+        is GuideStep.Prompt -> dimScreen
+        is GuideStep.Move, is GuideStep.LaunchAction -> false
+    }
+
+/**
+ * The evidence backing a session, shown so the catalog stays honest about how strong the
+ * science is — [grade] 5 is a direct, well-replicated physiological mechanism (the
+ * physiological sigh); 1 is a plausible-but-thin rationale. Never blank: a session with no
+ * defensible [finding] shouldn't ship.
+ */
+@Stable
+data class Evidence(
+    val grade: Int,
+    val citation: String,
+    val finding: String,
+) {
+    init {
+        require(grade in 1..5) { "evidence grade must be 1..5, was $grade" }
+        require(citation.isNotBlank()) { "evidence citation must not be blank" }
+        require(finding.isNotBlank()) { "evidence finding must not be blank" }
+    }
+}
+
+/** What kind of thing a session asks the body to do — drives iconography and grouping. */
+enum class Modality {
+    MOVE,
+    STRETCH,
+    EYES,
+    CALM,
+    MIND,
+    AMBIENT,
+    CONNECT,
+}
+
+/** A precondition the device/user must satisfy before a session is offerable. */
+enum class Requirement {
+    AUDIO,
+    STAIRS,
+    MOVE_SPACE,
+    WATER_ACCESS,
+    HAS_CLOSE_PERSON,
 }
 
 /**
@@ -109,6 +186,19 @@ data class SessionScript(
     val id: String,
     /** Display name — named things become rituals ("do a Sigh"). */
     val displayName: String,
+    /** What kind of thing this session asks the body to do. */
+    val modality: Modality,
+    /** The science backing this session — shown so the catalog stays honest. */
+    val evidence: Evidence,
+    /** Preconditions that must hold before this session is offerable. */
+    val requirements: Set<Requirement> = emptySet(),
+    /** Self-imposed frequency cap (e.g. The Plunge); null = no cap. */
+    val minHoursBetween: Int? = null,
+    /** True for sessions that are activating/jarring regardless of [modality] (e.g. The
+     *  Plunge's cold water) and so should still drop out after quiet hours start. Every
+     *  [Modality.MOVE] session is implicitly night-vetoed too — this flag is only for the
+     *  exceptions modality alone doesn't catch. */
+    val nightVetoed: Boolean = false,
     /** Arrival line pools keyed by Sense trigger; [arrivalDefault] covers the rest. */
     val arrivalByTrigger: Map<String, CopyPool> = emptyMap(),
     val arrivalDefault: CopyPool,
@@ -122,6 +212,9 @@ data class SessionScript(
 ) {
     init {
         require(guide.isNotEmpty()) { "$id: a session needs at least one guide step" }
+        require(minHoursBetween == null || minHoursBetween > 0) {
+            "$id: minHoursBetween must be positive, was $minHoursBetween"
+        }
     }
 
     /** The honest duration — what the notification promised is what runs. */

@@ -20,27 +20,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.reset.core.designsystem.AppColors
 import com.reset.core.designsystem.AppDimens
 import com.reset.core.designsystem.AppType
+import com.reset.core.designsystem.BreathIcon
+import com.reset.core.designsystem.PlusIcon
+import com.reset.feature.home.DayPeriod
 import com.reset.feature.home.HomeConstants
 import com.reset.feature.home.HomeState
 import com.reset.feature.home.R
 import com.reset.feature.home.navigation.HomeIntent
-import com.reset.feature.home.ui.components.BreathingTile
 import com.reset.feature.home.ui.components.CelebrationBannerCard
-import com.reset.feature.home.ui.components.CustomTile
-import com.reset.feature.home.ui.components.ExploreMoreButton
-import com.reset.feature.home.ui.components.MeditateHeroCard
-import com.reset.feature.home.ui.components.MindfulTipCard
+import com.reset.feature.home.ui.components.CheckInCard
+import com.reset.feature.home.ui.components.HomeQuickActionRow
+import com.reset.feature.home.ui.components.HomeStatTile
 
 /**
- * Stateless Home surface — the design's Home tab. Renders purely from [HomeState]; every
- * event flows up through [onIntent]. The celebration banner pops over the content when a
- * break was just finished.
+ * Stateless Home surface — the design's "Check In" Home tab. Renders purely from
+ * [HomeState]; every event flows up through [onIntent]. The celebration banner pops over
+ * the content when a break was just finished.
  */
 @Composable
 fun HomeScreen(
@@ -48,10 +50,12 @@ fun HomeScreen(
     onIntent: (HomeIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val facts = stringArrayResource(R.array.home_break_facts)
-    val factIndex = state.factIndex.coerceIn(0, facts.lastIndex)
+    val isNight = state.dayPeriod == DayPeriod.NIGHT
+    val backdrop = if (isNight) HomeTone.nightBackground else AppColors.surfaceWarm
+    val ink = if (isNight) HomeTone.nightInk else AppColors.ink
+    val inkMuted = if (isNight) HomeTone.nightInkMuted else AppColors.inkMuted
 
-    Box(modifier.fillMaxSize().background(AppColors.surfaceWarm)) {
+    Box(modifier.fillMaxSize().background(backdrop)) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -62,25 +66,26 @@ fun HomeScreen(
                     vertical = AppDimens.screenPaddingV,
                 ),
         ) {
+            val weekdayNames = stringArrayResource(R.array.home_weekday_names)
+            if (!isNight) {
+                Text(
+                    text = weekdayNames.getOrElse(state.dayOfWeekIndex) { weekdayNames[0] },
+                    style = AppType.body,
+                    color = inkMuted,
+                )
+            }
             Text(
-                text = stringResource(R.string.home_fact, facts[factIndex]),
-                style = AppType.factTitle,
-                color = AppColors.ink,
+                text = stringResource(greetingRes(state.dayPeriod)),
+                style = AppType.welcomeTitle,
+                color = ink,
+                modifier = Modifier.padding(top = 4.dp),
             )
 
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = AppDimens.screenPaddingH / 2),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                ExploreMoreButton(onClick = { onIntent(HomeIntent.ExploreMore) })
-            }
-
-            MeditateHeroCard(
-                durationMin = state.durationMin,
-                onClick = { onIntent(HomeIntent.StartMeditate) },
-                modifier = Modifier.padding(top = HomeConstants.cardSpacing),
+            CheckInCard(
+                checkIn = state.checkIn,
+                onClickCta = { onIntent(HomeIntent.OpenCheckIn) },
+                onClickSkip = { onIntent(HomeIntent.DismissCheckIn) },
+                modifier = Modifier.padding(top = HomeConstants.sectionSpacing),
             )
 
             Row(
@@ -89,29 +94,41 @@ fun HomeScreen(
                     .padding(top = HomeConstants.cardSpacing),
                 horizontalArrangement = Arrangement.spacedBy(HomeConstants.cardSpacing),
             ) {
-                BreathingTile(
-                    onClick = { onIntent(HomeIntent.StartDeepBreathing) },
+                HomeStatTile(
+                    eyebrow = stringResource(R.string.home_stat_today),
+                    value = pluralStringResource(R.plurals.home_stat_today_pauses, state.todayPauses, state.todayPauses),
+                    sub = stringResource(R.string.home_stat_today_quiet_min, state.todayQuietMin),
+                    eyebrowColor = AppColors.accentDark,
                     modifier = Modifier.weight(1f),
                 )
-                CustomTile(
-                    onClick = { onIntent(HomeIntent.OpenBuilder) },
-                    modifier = Modifier.weight(1f),
-                )
+                state.nextNudgeAt?.let { nextNudgeAt ->
+                    HomeStatTile(
+                        eyebrow = stringResource(R.string.home_stat_next_nudge),
+                        value = nextNudgeAt,
+                        sub = stringResource(R.string.home_stat_next_nudge_sub),
+                        eyebrowColor = AppColors.teal,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
 
-            Text(
-                text = stringResource(R.string.home_mindful_tip),
-                style = AppType.eyebrowWide,
-                color = AppColors.inkMuted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = HomeConstants.sectionSpacing),
-            )
-            MindfulTipCard(
-                body = stringResource(R.string.home_tip_body),
-                modifier = Modifier.padding(top = HomeConstants.gridSpacing),
-            )
+            Column(
+                Modifier.padding(top = HomeConstants.cardSpacing),
+                verticalArrangement = Arrangement.spacedBy(HomeConstants.gridSpacing),
+            ) {
+                HomeQuickActionRow(
+                    title = stringResource(R.string.home_quick_breather_title),
+                    sub = stringResource(R.string.home_quick_breather_sub),
+                    icon = { iconModifier -> BreathIcon(iconModifier, tint = AppColors.teal) },
+                    onClick = { onIntent(HomeIntent.StartDeepBreathing) },
+                )
+                HomeQuickActionRow(
+                    title = stringResource(R.string.home_quick_builder_title),
+                    sub = stringResource(R.string.home_quick_builder_sub),
+                    icon = { iconModifier -> PlusIcon(iconModifier, tint = AppColors.ink) },
+                    onClick = { onIntent(HomeIntent.OpenBuilder) },
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -130,9 +147,16 @@ fun HomeScreen(
                 title = stringResource(R.string.home_celebrate_title),
                 message = stringResource(
                     R.string.home_celebrate_message,
-                    state.celebration?.streakDays ?: state.stats.streak,
+                    state.celebration?.streakDays ?: state.streak,
                 ),
             )
         }
     }
+}
+
+private fun greetingRes(dayPeriod: DayPeriod): Int = when (dayPeriod) {
+    DayPeriod.MORNING -> R.string.home_greeting_morning
+    DayPeriod.AFTERNOON -> R.string.home_greeting_afternoon
+    DayPeriod.EVENING -> R.string.home_greeting_evening
+    DayPeriod.NIGHT -> R.string.home_greeting_night
 }

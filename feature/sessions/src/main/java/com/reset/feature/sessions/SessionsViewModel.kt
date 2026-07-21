@@ -20,18 +20,15 @@ class SessionsViewModel @Inject constructor(
     override fun initialState() = SessionsState.getDefault()
 
     fun handleSessionsIntent(intent: SessionsIntent) = when (intent) {
-        is SessionsIntent.PickBreak -> pickBreak(intent.kind)
+        is SessionsIntent.PickScript -> pickScript(intent.scriptId)
         SessionsIntent.SkipBreak -> skipBreak()
         SessionsIntent.HandleBackPress -> close()
-        /*is SessionsIntent.Load -> TODO()
-        is SessionsIntent.Retry -> TODO()
-        */
     }
 
-    /** Hands the picked break to the full-screen session experience. */
-    private fun pickBreak(kind: String) = intent {
+    /** Hands the picked script to the full-screen session experience. */
+    private fun pickScript(scriptId: String) = intent {
         navigator.navigate(
-            SessionDestination(mode = SessionDestination.MODE_BREAK, breakKind = kind),
+            SessionDestination(mode = SessionDestination.MODE_BREAK, scriptId = scriptId),
         )
     }
 

@@ -3,6 +3,7 @@ package com.reset.feature.sessions
 import androidx.lifecycle.SavedStateHandle
 import com.reset.feature.home.api.HomeDestination
 import com.reset.feature.sessions.api.SessionDestination
+import com.reset.feature.sessions.api.SessionScriptIds
 import com.reset.feature.sessions.navigation.SessionsIntent
 import com.reset.navigation.NavEvent
 import kotlinx.coroutines.flow.first
@@ -17,19 +18,19 @@ class SessionsViewModelTest {
         SessionsViewModel(SavedStateHandle(), navigator)
 
     @Test
-    fun `picking a break opens the session experience with its kind`() = runTest {
+    fun `picking a script opens the session experience with its catalog id`() = runTest {
         val navigator = FakeNavigator()
 
         viewModel(navigator).test(this) {
             expectInitialState()
             containerHost.handleSessionsIntent(
-                SessionsIntent.PickBreak(SessionDestination.KIND_STRETCH),
+                SessionsIntent.PickScript(SessionScriptIds.THE_UNFOLD),
             )
 
             val event = navigator.events.first() as NavEvent.Navigate
             val destination = event.screen as SessionDestination
             assertEquals(SessionDestination.MODE_BREAK, destination.mode)
-            assertEquals(SessionDestination.KIND_STRETCH, destination.breakKind)
+            assertEquals(SessionScriptIds.THE_UNFOLD, destination.scriptId)
 
             cancelAndIgnoreRemainingItems()
         }

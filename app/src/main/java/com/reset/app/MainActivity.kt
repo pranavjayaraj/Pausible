@@ -27,6 +27,8 @@ import com.reset.app.ui.onboarding.OnboardingRoute
 import com.reset.core.designsystem.AppBackground
 import com.reset.feature.builder.api.BuilderDestination
 import com.reset.feature.builder.ui.BuilderRoute
+import com.reset.feature.checkin.api.CheckInDestination
+import com.reset.feature.checkin.ui.CheckInRoute
 import com.reset.feature.home.api.HomeDestination
 import com.reset.feature.mood.api.MoodDestination
 import com.reset.feature.mood.ui.MoodRoute
@@ -143,6 +145,8 @@ class MainActivity : ComponentActivity() {
                         composable<MoodDestination> { MoodRoute(soundController) }
 
                         composable<BuilderDestination> { BuilderRoute() }
+
+                        composable<CheckInDestination> { CheckInRoute() }
 
                         composable<SettingsDestination> { SettingsRoute() }
 

@@ -28,7 +28,7 @@ import com.reset.core.designsystem.StretchIcon
 import com.reset.feature.sessions.R
 import com.reset.feature.sessions.SessionsConstants
 import com.reset.feature.sessions.SessionsState
-import com.reset.feature.sessions.api.SessionDestination
+import com.reset.feature.sessions.api.SessionScriptIds
 import com.reset.feature.sessions.navigation.SessionsIntent
 import com.reset.feature.sessions.ui.components.BreakOptionCard
 
@@ -96,7 +96,7 @@ fun SessionsScreen(
                     contentColor = AppColors.textOnDark,
                     metaColor = AppColors.textOnDark.copy(alpha = 0.9f),
                     icon = { iconModifier -> StretchIcon(iconModifier, tint = AppColors.textOnDark) },
-                    onClick = { onIntent(SessionsIntent.PickBreak(SessionDestination.KIND_STRETCH)) },
+                    onClick = { onIntent(SessionsIntent.PickScript(SessionScriptIds.THE_UNFOLD)) },
                 )
                 BreakOptionCard(
                     title = stringResource(R.string.sessions_meditate),
@@ -105,7 +105,7 @@ fun SessionsScreen(
                     contentColor = AppColors.meditateCardInk,
                     metaColor = AppColors.meditateCardSub,
                     icon = { iconModifier -> ClosedEyeIcon(iconModifier, tint = AppColors.meditateCardInk) },
-                    onClick = { onIntent(SessionsIntent.PickBreak(SessionDestination.KIND_MEDITATE)) },
+                    onClick = { onIntent(SessionsIntent.PickScript(SessionScriptIds.HORIZON)) },
                 )
                 BreakOptionCard(
                     title = stringResource(R.string.sessions_breathing),
@@ -114,7 +114,7 @@ fun SessionsScreen(
                     contentColor = AppColors.textOnDark,
                     metaColor = AppColors.textOnDark.copy(alpha = 0.92f),
                     icon = { iconModifier -> BreathIcon(iconModifier, tint = AppColors.textOnDark) },
-                    onClick = { onIntent(SessionsIntent.PickBreak(SessionDestination.KIND_BREATHING)) },
+                    onClick = { onIntent(SessionsIntent.PickScript(SessionScriptIds.THE_SIGH)) },
                 )
             }
 

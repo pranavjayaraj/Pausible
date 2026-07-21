@@ -84,6 +84,32 @@ class SenseDecisionLogTest {
         assertEquals(PromptOutcome.PENDING.name, dao.byId(fresh)!!.outcome)
     }
 
+    @Test
+    fun `finds the most recent pending sitting-stretch prompt within the window`() = runTest {
+        log.logDecision(shownDecision(), features, t0, 15) // STRETCH, older
+        val recoveryBreak = log.logDecision(
+            shownDecision().copy(breakType = BreakType.RECOVERY_BREAK),
+            features,
+            t0 + 5 * minute,
+            15,
+        )
+        assertEquals(recoveryBreak, log.pendingSittingStretchDecisionId(nowMs = t0 + 6 * minute))
+    }
+
+    @Test
+    fun `ignores prompts outside the recency window and non-sitting break types`() = runTest {
+        log.logDecision(shownDecision(), features, t0, 15) // falls out of the 30-minute window
+        log.logDecision(windDownDecision(), features, t0 + 10 * minute, 15) // wrong break type
+        assertEquals(null, log.pendingSittingStretchDecisionId(nowMs = t0 + 40 * minute))
+    }
+
+    @Test
+    fun `an already-answered sitting-stretch prompt does not count as pending`() = runTest {
+        val id = log.logDecision(shownDecision(), features, t0, 15)
+        log.recordAccepted(id, t0 + 5_000)
+        assertEquals(null, log.pendingSittingStretchDecisionId(nowMs = t0 + 6_000))
+    }
+
     // ------------------------------------------------------------ history assembly
 
     @Test

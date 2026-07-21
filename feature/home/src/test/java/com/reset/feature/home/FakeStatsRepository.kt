@@ -9,13 +9,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 /** In-memory [StatsRepository] for Home ViewModel tests. */
 class FakeStatsRepository(
     stats: SessionStats = SessionStats(),
+    weeklyFocus: WeeklyFocus = WeeklyFocus(),
+    todayBreaksTaken: Int = 0,
 ) : StatsRepository {
 
     val statsFlow = MutableStateFlow(stats)
+    val weeklyFocusFlow = MutableStateFlow(weeklyFocus)
+    val todayBreaksTakenFlow = MutableStateFlow(todayBreaksTaken)
 
     override val stats: Flow<SessionStats> = statsFlow
 
-    override val weeklyFocus: Flow<WeeklyFocus> = MutableStateFlow(WeeklyFocus())
+    override val weeklyFocus: Flow<WeeklyFocus> = weeklyFocusFlow
+
+    override val todayBreaksTaken: Flow<Int> = todayBreaksTakenFlow
 
     override suspend fun recordFocusSession(minutes: Int) {
         statsFlow.value = statsFlow.value.let {

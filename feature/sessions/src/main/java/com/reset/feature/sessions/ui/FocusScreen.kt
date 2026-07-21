@@ -1,6 +1,5 @@
 package com.reset.feature.sessions.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,13 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.reset.core.designsystem.AppColors
@@ -38,9 +32,7 @@ import com.reset.feature.sessions.R
 import com.reset.feature.sessions.SessionConstants
 import com.reset.feature.sessions.SessionState
 import com.reset.feature.sessions.navigation.SessionIntent
-
-private const val FULL_SWEEP_DEGREES = 360f
-private const val SWEEP_START_DEGREES = -90f
+import com.reset.feature.sessions.ui.components.SessionRing
 
 /**
  * The active focus countdown: Sprout with closed eyes, the progress ring, and the
@@ -77,7 +69,7 @@ fun FocusScreen(
             modifier = Modifier.padding(top = SessionConstants.focusTitleSpacing),
         )
 
-        CountdownRing(
+        SessionRing(
             totalSeconds = state.focus.totalSeconds,
             remainingSeconds = state.focus.remainingSeconds,
             modifier = Modifier.padding(top = SessionConstants.ringSpacing),
@@ -107,46 +99,6 @@ fun FocusScreen(
                 onClick = { onIntent(SessionIntent.EndSession) },
             )
         }
-    }
-}
-
-/** Track + sweep ring with the m:ss countdown centred inside. */
-@Composable
-private fun CountdownRing(totalSeconds: Int, remainingSeconds: Int, modifier: Modifier = Modifier) {
-    val fraction = if (totalSeconds > 0) remainingSeconds.toFloat() / totalSeconds else 0f
-    val countdown = SessionConstants.formatMmSs(remainingSeconds)
-    val countdownLabel = stringResource(R.string.session_countdown_content_description, countdown)
-
-    Box(
-        modifier
-            .size(AppDimens.ringSize)
-            .semantics { contentDescription = countdownLabel },
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.fillMaxSize()) {
-            val stroke = Stroke(width = AppDimens.ringStroke.toPx(), cap = StrokeCap.Round)
-            val inset = AppDimens.ringStroke.toPx() / 2
-            val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
-            drawArc(
-                color = AppColors.ringTrack,
-                startAngle = SWEEP_START_DEGREES,
-                sweepAngle = FULL_SWEEP_DEGREES,
-                useCenter = false,
-                topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
-                size = arcSize,
-                style = stroke,
-            )
-            drawArc(
-                color = AppColors.ringProgress,
-                startAngle = SWEEP_START_DEGREES,
-                sweepAngle = FULL_SWEEP_DEGREES * fraction,
-                useCenter = false,
-                topLeft = androidx.compose.ui.geometry.Offset(inset, inset),
-                size = arcSize,
-                style = stroke,
-            )
-        }
-        Text(text = countdown, style = AppType.timer, color = AppColors.textOnDark)
     }
 }
 

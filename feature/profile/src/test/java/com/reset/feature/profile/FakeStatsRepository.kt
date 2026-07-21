@@ -19,6 +19,8 @@ class FakeStatsRepository(
 
     override val weeklyFocus: Flow<WeeklyFocus> = weeklyFocusFlow
 
+    override val todayBreaksTaken: Flow<Int> = MutableStateFlow(0)
+
     override suspend fun recordFocusSession(minutes: Int) = Unit
 
     override suspend fun recordBreak() = Unit

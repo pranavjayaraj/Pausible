@@ -7,6 +7,10 @@ package com.reset.model.domain
  */
 interface TimeProvider {
 
+    /** Wall-clock epoch millis, for one-off math (next-reminder estimates, recency windows)
+     *  that needs a real instant rather than one of the calendar-bucket fields below. */
+    fun nowMillis(): Long
+
     /** Whole days since the Unix epoch, in the device's timezone. */
     fun todayEpochDay(): Long
 

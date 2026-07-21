@@ -68,14 +68,6 @@ object AppColors {
     val exploreBorder = Color(0xFFD8CFC0)
     val toggleOff = Color(0xFFD8D5CC)
 
-    // Home tiles
-    val breathTile = Color(0xFFF3DFA4)
-    val breathTileInk = Color(0xFF6B5A2E)
-    val breathTileWave = Color(0xFF8A6D2F)
-    val breathTileLeaf = Color(0xFFE8C36E)
-    val customTile = Color(0xFF206E78)
-    val homeTabPill = Color(0xFFF8D9A8)
-
     // Builder
     val suggestCard = Color(0xFFFFF3E3)
 

@@ -8,6 +8,8 @@ import javax.inject.Inject
 /** Device-clock [TimeProvider]; the only place that touches [Calendar]. */
 class SystemTimeProvider @Inject constructor() : TimeProvider {
 
+    override fun nowMillis(): Long = System.currentTimeMillis()
+
     override fun todayEpochDay(): Long {
         val calendar = Calendar.getInstance()
         val midnightOffsetMs =

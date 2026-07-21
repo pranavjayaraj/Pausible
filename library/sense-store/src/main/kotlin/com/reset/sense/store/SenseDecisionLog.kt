@@ -103,6 +103,19 @@ class SenseDecisionLog @Inject constructor(
         dao.shownSince(sinceMs).count { it.breakType == WIND_DOWN_TYPE }
 
     /**
+     * Id of the most recent still-PENDING STRETCH/RECOVERY_BREAK prompt shown within
+     * [windowMs], or null when there is none — the signal behind Home's "Sense noticed"
+     * pre-lit check-in card. [shownSince] returns oldest-first, so the last match is the
+     * most recent.
+     */
+    suspend fun pendingSittingStretchDecisionId(
+        nowMs: Long,
+        windowMs: Long = SITTING_STRETCH_WINDOW_MS,
+    ): Long? = dao.shownSince(nowMs - windowMs)
+        .lastOrNull { it.outcomeEnum == PromptOutcome.PENDING && it.breakType in SITTING_STRETCH_TYPES }
+        ?.id
+
+    /**
      * Wind-down success signal. A wind-down's true positive is not a tap —
      * it's the screen going dark soon after the nudge. If the most recent
      * screen-off landed within [WIND_DOWN_SUCCESS_WINDOW_MS] after a pending
@@ -266,6 +279,8 @@ class SenseDecisionLog @Inject constructor(
         const val IGNORE_TIMEOUT_MS = 30 * 60 * 1000L
         const val WIND_DOWN_TYPE = "WIND_DOWN" // BreakType.WIND_DOWN.name
         const val WIND_DOWN_SUCCESS_WINDOW_MS = 10 * 60 * 1000L
+        val SITTING_STRETCH_TYPES = setOf("STRETCH", "RECOVERY_BREAK") // BreakType names
+        const val SITTING_STRETCH_WINDOW_MS = 30 * 60 * 1000L // matches IGNORE_TIMEOUT_MS
         const val APP_OPEN_ATTRIBUTION_MS = 10 * 60 * 1000L
         const val ONE_DAY_MS = 24 * 60 * 60 * 1000L
         const val SEVEN_DAYS_MS = 7 * ONE_DAY_MS

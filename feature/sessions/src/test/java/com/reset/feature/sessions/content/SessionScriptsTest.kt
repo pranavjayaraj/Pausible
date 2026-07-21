@@ -1,6 +1,5 @@
 package com.reset.feature.sessions.content
 
-import com.reset.feature.sessions.api.SessionDestination
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -13,6 +12,19 @@ class SessionScriptsTest {
         SessionScripts.HORIZON,
         SessionScripts.THE_UNFOLD,
         SessionScripts.EMBER,
+        SessionScripts.UNCLENCH,
+        SessionScripts.THE_LOOP,
+        SessionScripts.WRISTS_AND_HANDS,
+        SessionScripts.FERN,
+        SessionScripts.THE_CLIMB,
+        SessionScripts.STEP_OUTSIDE,
+        SessionScripts.WARMTH,
+        SessionScripts.THREE_GOOD_THINGS,
+        SessionScripts.MINI_UNPACK,
+        SessionScripts.THE_SETTLE,
+        SessionScripts.THE_SWEEP,
+        SessionScripts.THE_PLUNGE,
+        SessionScripts.REACH_OUT,
     )
 
     // ------------------------------------------------------------ integrity
@@ -40,6 +52,7 @@ class SessionScriptsTest {
                         is GuideStep.Breath -> add(step.cue)
                         is GuideStep.Move -> add(step.instruction)
                         is GuideStep.Prompt -> add(step.text)
+                        is GuideStep.LaunchAction -> add(step.prompt)
                     }
                 }
             }
@@ -99,22 +112,12 @@ class SessionScriptsTest {
     // ------------------------------------------------------------ catalog mapping
 
     @Test
-    fun `every break kind resolves to a script`() {
-        assertEquals(SessionScripts.THE_UNFOLD, SessionScripts.forBreakKind(SessionDestination.KIND_STRETCH))
-        assertEquals(SessionScripts.HORIZON, SessionScripts.forBreakKind(SessionDestination.KIND_MEDITATE))
-        assertEquals(SessionScripts.THE_SIGH, SessionScripts.forBreakKind(SessionDestination.KIND_BREATHING))
-        assertEquals("unknown kinds land somewhere safe", SessionScripts.THE_SIGH, SessionScripts.forBreakKind(null))
-    }
-
-    @Test
-    fun `wind-down trigger owns the night regardless of kind`() {
-        assertEquals(
-            SessionScripts.EMBER,
-            SessionScripts.forBreak(SessionDestination.KIND_STRETCH, senseTrigger = "WIND_DOWN"),
-        )
-        assertEquals(
-            SessionScripts.THE_UNFOLD,
-            SessionScripts.forBreak(SessionDestination.KIND_STRETCH, senseTrigger = null),
-        )
+    fun `every sense trigger resolves to its script, with a safe fallback`() {
+        assertEquals(SessionScripts.THE_UNFOLD, SessionScripts.forBreak("STRETCH"))
+        assertEquals(SessionScripts.THE_UNFOLD, SessionScripts.forBreak("RECOVERY_BREAK"))
+        assertEquals(SessionScripts.HORIZON, SessionScripts.forBreak("EYE_BREAK"))
+        assertEquals(SessionScripts.EMBER, SessionScripts.forBreak("WIND_DOWN"))
+        assertEquals("unknown triggers land somewhere safe", SessionScripts.THE_SIGH, SessionScripts.forBreak("SOMETHING_NEW"))
+        assertEquals("no trigger lands somewhere safe", SessionScripts.THE_SIGH, SessionScripts.forBreak(null))
     }
 }

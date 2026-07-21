@@ -1,6 +1,7 @@
 package com.reset.app
 
 import com.reset.feature.sessions.api.SessionDestination
+import com.reset.feature.sessions.content.SessionScripts
 import com.reset.model.domain.CelebrationEvent
 import com.reset.model.domain.CelebrationStore
 import com.reset.sense.ml.BreakType
@@ -53,38 +54,19 @@ class SenseBreakCoordinator @Inject constructor(
         decisionLog.resolveAppOpenOutcomes(System.currentTimeMillis())
     }
 
-    /** Maps the prompt's break type onto a typed session route; arms completion tracking. */
+    /** Maps the prompt's break type onto a typed session route via the catalog script the
+     *  trigger resolves to; arms completion tracking. Duration is never passed in here — it's
+     *  whatever the resolved script's own steps sum to (the honest-duration rule). */
     fun destinationFor(breakTypeName: String?, decisionId: Long): SessionDestination {
         pendingDecisionId.set(decisionId)
         val breakType = breakTypeName?.let { name ->
             runCatching { BreakType.valueOf(name) }.getOrNull()
         } ?: BreakType.BREATHING_RESET
-        return when (breakType) {
-            BreakType.STRETCH,
-            BreakType.RECOVERY_BREAK -> SessionDestination(
-                mode = SessionDestination.MODE_BREAK,
-                breakKind = SessionDestination.KIND_STRETCH,
-                durationMin = if (breakType == BreakType.RECOVERY_BREAK) 3 else 1,
-            )
-            BreakType.WIND_DOWN -> SessionDestination(
-                mode = SessionDestination.MODE_BREAK,
-                breakKind = SessionDestination.KIND_BREATHING,
-                durationMin = 3,
-                paceSec = 6, // slower cadence for the wind-down
-            )
-            BreakType.EYE_BREAK -> SessionDestination(
-                mode = SessionDestination.MODE_BREAK,
-                breakKind = SessionDestination.KIND_MEDITATE,
-                durationMin = 1,
-            )
-            BreakType.BREATHING_RESET,
-            BreakType.PASSIVE_REMINDER,
-            BreakType.NONE -> SessionDestination(
-                mode = SessionDestination.MODE_BREAK,
-                breakKind = SessionDestination.KIND_BREATHING,
-                durationMin = 1,
-            )
-        }
+        return SessionDestination(
+            mode = SessionDestination.MODE_BREAK,
+            scriptId = SessionScripts.forBreak(breakType.name).id,
+            senseTrigger = breakType.name,
+        )
     }
 
     private companion object {

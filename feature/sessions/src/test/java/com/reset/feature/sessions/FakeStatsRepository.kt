@@ -20,6 +20,8 @@ class FakeStatsRepository : StatsRepository {
 
     override val weeklyFocus: Flow<WeeklyFocus> = MutableStateFlow(WeeklyFocus())
 
+    override val todayBreaksTaken: Flow<Int> = MutableStateFlow(0)
+
     override suspend fun recordFocusSession(minutes: Int) {
         recordedFocusMinutes += minutes
     }

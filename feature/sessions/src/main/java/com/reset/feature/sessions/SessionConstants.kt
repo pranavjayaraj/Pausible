@@ -2,19 +2,19 @@ package com.reset.feature.sessions
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.reset.core.designsystem.AppColors
 import com.reset.feature.sessions.api.SessionSoundKeys
+import com.reset.feature.sessions.content.Modality
+import com.reset.feature.sessions.content.SessionScript
 
 /** Timing, theming, and format constants for the session experience. */
 object SessionConstants {
 
-    /** Interval between focus countdown ticks. */
+    /** Interval between focus countdown ticks, and the break player's honest-duration ring. */
     const val SESSION_TICK_MS = 1_000L
 
-    /** One guided-breathing phase (inhale or exhale) during a break. */
+    /** One guided-breathing phase (inhale or exhale) during the custom-sit warm-up. */
     const val BREATH_PHASE_MS = 4_000
-
-    /** Break breathing runs 6 phases = 3 full cycles, like the design. */
-    const val BREAK_BREATH_TICKS = 6
 
     /** The custom warm-up runs 4 phases before the session starts. */
     const val WARMUP_BREATH_TICKS = 4
@@ -33,6 +33,18 @@ object SessionConstants {
     )
 
     fun focusTheme(soundKey: String?): Color? = soundKey?.let(focusThemes::get)
+
+    /** Backdrop for a catalog session by [SessionScript.modality]; night scripts (Ember) run
+     *  the deepest tone regardless of modality. */
+    fun breakBackdrop(script: SessionScript): Color = when {
+        script.arrivalByTrigger.containsKey("WIND_DOWN") -> AppColors.tealDeep
+        else -> when (script.modality) {
+            Modality.CALM, Modality.MIND -> AppColors.breathingBg
+            Modality.EYES, Modality.AMBIENT -> AppColors.teal
+            Modality.MOVE, Modality.STRETCH -> AppColors.tealDeep
+            Modality.CONNECT -> AppColors.accentDark
+        }
+    }
 
     // ── Dimens ────────────────────────────────────────────────
     val focusMascotSize = 66.dp

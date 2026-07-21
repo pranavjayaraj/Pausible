@@ -18,12 +18,14 @@
     <string name="session_end">End Session</string>
     <string name="session_countdown_content_description">%1$s remaining</string>
 
-    <!-- Session experience: guided breathing -->
+    <!-- Session experience: warm-up (MODE_FOCUS only) -->
     <string name="session_breath_in">Breathe in…</string>
     <string name="session_breath_out">Breathe out…</string>
-    <string name="session_break_title_stretch">BODY STRETCHES · 2 MIN</string>
-    <string name="session_break_title_meditate">MEDITATE · 1 MIN</string>
-    <string name="session_break_title_breathing">DEEP BREATHING · 3 MIN</string>
     <string name="session_break_title_warmup">WARM-UP · 3 DEEP BREATHS</string>
     <string name="session_finish_early">Finish early</string>
+
+    <!-- Session experience: the catalog three-act player -->
+    <string name="session_close_your_eyes">Close your eyes.</string>
+    <string name="session_launch_action_message">Send message</string>
+    <string name="session_launch_action_call">Call</string>
 </resources>

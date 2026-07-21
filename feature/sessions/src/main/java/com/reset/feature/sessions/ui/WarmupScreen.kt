@@ -22,16 +22,15 @@ import com.reset.core.designsystem.AppType
 import com.reset.core.designsystem.BreathingGuide
 import com.reset.feature.sessions.R
 import com.reset.feature.sessions.SessionState
-import com.reset.feature.sessions.api.SessionDestination
 import com.reset.feature.sessions.navigation.SessionIntent
 
 /**
- * The guided-breathing pulse over the deep-teal backdrop: kind title up top, the shared
- * [BreathingGuide] in the middle, "Finish early" at the bottom. Stateless — the breath
- * clock is owned by the ViewModel.
+ * The warm-up breathing pulse ahead of a custom focus sit (MODE_FOCUS only — the catalog's
+ * break sessions run eyes-closed through the three-act player, not this pacing UI).
+ * Stateless — the breath clock is owned by the ViewModel.
  */
 @Composable
-fun BreathingScreen(
+fun WarmupScreen(
     state: SessionState,
     onIntent: (SessionIntent) -> Unit,
     modifier: Modifier = Modifier,
@@ -47,21 +46,21 @@ fun BreathingScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = breathTitle(state),
+            text = stringResource(R.string.session_break_title_warmup),
             style = AppType.eyebrowWide,
             color = AppColors.textOnDarkFaint,
         )
 
         BreathingGuide(
-            inhale = state.breathing.inhale,
-            phaseDurationMs = state.breathing.phaseDurationMs,
-            phaseLabel = if (state.breathing.inhale) {
+            inhale = state.warmup.inhale,
+            phaseDurationMs = state.warmup.phaseDurationMs,
+            phaseLabel = if (state.warmup.inhale) {
                 stringResource(R.string.session_breath_in)
             } else {
                 stringResource(R.string.session_breath_out)
             },
-            totalCycles = state.breathing.totalCycles,
-            completedCycles = state.breathing.completedCycles,
+            totalCycles = state.warmup.totalCycles,
+            completedCycles = state.warmup.completedCycles,
             modifier = Modifier.padding(top = 60.dp),
         )
 
@@ -74,18 +73,8 @@ fun BreathingScreen(
             modifier = Modifier
                 .clip(AppShapes.button)
                 .border(1.5.dp, AppColors.finishEarlyBorder, AppShapes.button)
-                .clickable { onIntent(SessionIntent.FinishBreathingEarly) }
+                .clickable { onIntent(SessionIntent.FinishWarmupEarly) }
                 .padding(horizontal = 28.dp, vertical = 12.dp),
         )
     }
 }
-
-@Composable
-private fun breathTitle(state: SessionState): String = stringResource(
-    when {
-        state.breathing.isWarmup -> R.string.session_break_title_warmup
-        state.breakKind == SessionDestination.KIND_STRETCH -> R.string.session_break_title_stretch
-        state.breakKind == SessionDestination.KIND_MEDITATE -> R.string.session_break_title_meditate
-        else -> R.string.session_break_title_breathing
-    },
-)

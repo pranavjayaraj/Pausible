@@ -4,6 +4,6 @@ package com.reset.feature.sessions.navigation
 sealed interface SessionIntent {
     data object ToggleRunning : SessionIntent
     data object EndSession : SessionIntent
-    data object FinishBreathingEarly : SessionIntent
+    data object FinishWarmupEarly : SessionIntent
     data object HandleBackPress : SessionIntent
 }

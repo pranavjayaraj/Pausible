@@ -65,4 +65,15 @@ class ReminderTimeCalculatorTest {
         assertFalse(ReminderTimeCalculator.isWithinWindow(at(18, 0), 9, 18, zone))
         assertFalse(ReminderTimeCalculator.isWithinWindow(at(8, 59), 9, 18, zone))
     }
+
+    @Test
+    fun `a window that wraps midnight (quiet hours' default 22 to 7) is a union, not empty`() {
+        assertTrue(ReminderTimeCalculator.isWithinWindow(at(23, 0), 22, 7, zone))
+        assertTrue(ReminderTimeCalculator.isWithinWindow(at(22, 0), 22, 7, zone))
+        assertTrue(ReminderTimeCalculator.isWithinWindow(at(3, 0), 22, 7, zone))
+        assertTrue(ReminderTimeCalculator.isWithinWindow(at(6, 59), 22, 7, zone))
+        assertFalse(ReminderTimeCalculator.isWithinWindow(at(7, 0), 22, 7, zone))
+        assertFalse(ReminderTimeCalculator.isWithinWindow(at(12, 0), 22, 7, zone))
+        assertFalse(ReminderTimeCalculator.isWithinWindow(at(21, 59), 22, 7, zone))
+    }
 }

@@ -24,6 +24,7 @@ class StatsRepositoryImplTest {
         var epochDay: Long = 1_000L,
         var dayIndex: Int = 0,
     ) : TimeProvider {
+        override fun nowMillis() = epochDay * 86_400_000L
         override fun todayEpochDay() = epochDay
         override fun dayOfWeekIndex() = dayIndex
         override fun hourOfDay() = 10
@@ -95,5 +96,24 @@ class StatsRepositoryImplTest {
         time.epochDay = 1_005L
         repo.recordBreak()
         assertEquals(1, repo.stats.first().streak)
+    }
+
+    @Test
+    fun `today's break count resets at midnight, unlike the all-time total`() = runTest {
+        val time = FakeTimeProvider(epochDay = 1_000L)
+        val repo = repository(time)
+
+        repo.recordBreak()
+        repo.recordBreak()
+        assertEquals(2, repo.todayBreaksTaken.first())
+        assertEquals(2, repo.stats.first().breaksTaken)
+
+        time.epochDay = 1_001L
+        assertEquals(0, repo.todayBreaksTaken.first())
+        assertEquals(2, repo.stats.first().breaksTaken)
+
+        repo.recordBreak()
+        assertEquals(1, repo.todayBreaksTaken.first())
+        assertEquals(3, repo.stats.first().breaksTaken)
     }
 }

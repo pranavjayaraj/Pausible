@@ -1,33 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Home -->
-    <string name="home_fact">💡 %1$s</string>
-    <string name="home_explore_more">EXPLORE MORE</string>
-    <string name="home_meditate_title">Meditate</string>
-    <string name="home_meditate_tag">PRESET INTERVAL</string>
-    <string name="home_meditate_prompt">Find your Zen</string>
-    <string name="home_meditate_content_description">Meditate. Start a %1$d minute session.</string>
-    <string name="home_deep_breathing">DEEP BREATHING</string>
-    <string name="home_custom">Custom</string>
-    <string name="home_mindful_tip">MINDFUL TIP</string>
-    <string name="home_tip_body">Sprout says: unclench your jaw and drop your shoulders. There — you just meditated a little.</string>
+    <!-- Home: header -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+    <string name="home_greeting_night">Still up?</string>
+
+    <!-- Home: check-in card, resting -->
+    <string name="home_checkin_eyebrow">CHECK IN</string>
+    <string name="home_checkin_title">How are you doing right now?</string>
+    <string name="home_checkin_subtitle">One tap. I\'ll find you the right minute.</string>
+    <string name="home_checkin_cta">Tell me what\'s going on</string>
+    <string name="home_checkin_skip">Not now — just browsing</string>
+
+    <!-- Home: check-in card, Sense pre-lit -->
+    <string name="home_checkin_sense_eyebrow">SPROUT NOTICED</string>
+    <string name="home_checkin_sense_title">Been a long stretch — check in?</string>
+    <string name="home_checkin_sense_subtitle">No wrong answers, one tap.</string>
+    <string name="home_checkin_sense_skip">I\'m okay, keep going</string>
+
+    <!-- Home: check-in card, night -->
+    <string name="home_checkin_night_title">Long day still humming?</string>
+    <string name="home_checkin_night_subtitle">One tap. Something soft before sleep.</string>
+    <string name="home_checkin_night_skip">Heading to bed — good night</string>
+
+    <!-- Home: stat tiles -->
+    <string name="home_stat_today">TODAY</string>
+    <plurals name="home_stat_today_pauses">
+        <item quantity="one">%1$d pause</item>
+        <item quantity="other">%1$d pauses</item>
+    </plurals>
+    <string name="home_stat_today_quiet_min">%1$d quiet minutes</string>
+    <string name="home_stat_next_nudge">NEXT NUDGE</string>
+    <string name="home_stat_next_nudge_sub">reset reminder</string>
+
+    <!-- Home: quick-access rows -->
+    <string name="home_quick_breather_title">Deep breathing</string>
+    <string name="home_quick_breather_sub">A quick reset</string>
+    <string name="home_quick_builder_title">Build your own</string>
+    <string name="home_quick_builder_sub">Custom session</string>
 
     <!-- Celebration banner -->
     <string name="home_celebrate_title">Nice breather! 🎉</string>
     <string name="home_celebrate_message">+1 break · %1$d-day streak safe</string>
 
-    <!-- Break fact of the day (rotated by day of month; size must match FACT_COUNT). -->
-    <string-array name="home_break_facts">
-        <item>A 5-minute break every hour can boost focus more than powering through.</item>
-        <item>Looking away from screens every 20 minutes eases eye strain.</item>
-        <item>Short walks after sitting boost circulation and mood.</item>
-        <item>Micro-breaks reduce mental fatigue faster than one long break.</item>
-        <item>Deep breathing for 60 seconds can lower your heart rate.</item>
-        <item>Stretching for 2 minutes releases tension built up from sitting.</item>
-        <item>Stepping outside for daylight helps reset your internal clock.</item>
-        <item>A brief pause between tasks improves memory retention.</item>
-        <item>Hydrating during breaks supports concentration afterward.</item>
-        <item>Even 90 seconds of stillness can lower stress hormones.</item>
+    <!-- Weekday names, Monday-first (matches TimeProvider.dayOfWeekIndex / WeeklyFocus). -->
+    <string-array name="home_weekday_names">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
     </string-array>
 
     <!-- Error -->

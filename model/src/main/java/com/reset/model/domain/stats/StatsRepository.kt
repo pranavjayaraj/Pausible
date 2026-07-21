@@ -15,6 +15,10 @@ interface StatsRepository {
     /** Trailing-week focus minutes for the Stats bar chart. */
     val weeklyFocus: Flow<WeeklyFocus>
 
+    /** Breaks recorded today (local date) — resets at midnight, unlike [stats]'
+     *  all-time [SessionStats.breaksTaken]. Drives Home's "Today" tile. */
+    val todayBreaksTaken: Flow<Int>
+
     /** Records a finished focus session: counts, total time, today's bucket, streak. */
     suspend fun recordFocusSession(minutes: Int)
 

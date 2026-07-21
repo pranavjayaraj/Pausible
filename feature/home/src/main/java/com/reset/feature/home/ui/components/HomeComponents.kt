@@ -1,6 +1,5 @@
 package com.reset.feature.home.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,9 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -19,191 +17,245 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.reset.core.designsystem.AppColors
-import com.reset.core.designsystem.AppDimens
 import com.reset.core.designsystem.AppShapes
 import com.reset.core.designsystem.AppType
-import com.reset.core.designsystem.BreathIcon
-import com.reset.core.designsystem.PlayIcon
-import com.reset.core.designsystem.PlusIcon
+import com.reset.core.designsystem.BackIcon
 import com.reset.core.designsystem.SproutExpression
 import com.reset.core.designsystem.SproutMascot
+import com.reset.feature.home.CheckInCardState
 import com.reset.feature.home.HomeConstants
 import com.reset.feature.home.R
+import com.reset.feature.home.ui.HomeTone
 
-private val heroInnerRadius = 16.dp
-private val heroShadow = 10.dp
-private val tileWaveWidth = 34.dp
-private val tileWaveHeight = 24.dp
-private val dashedCircleSize = 44.dp
-private val bannerShadow = 14.dp
+private val mascotOffsetY = (-30).dp
+private val mascotOffsetX = 8.dp
+private val dotSize = 7.dp
 
-/** The right-aligned outlined "EXPLORE MORE" pill above the hero card. */
+/**
+ * The single check-in entry card — the design's three palette variants (resting / Sense
+ * pre-lit / night) sharing one layout. Stateless: renders from [checkIn], events flow up
+ * through [onClickCta] / [onClickSkip].
+ */
 @Composable
-fun ExploreMoreButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
-        modifier
-            .clip(AppShapes.input)
-            .background(AppColors.surfaceWhite)
-            .border(1.5.dp, AppColors.exploreBorder, AppShapes.input)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.home_explore_more),
-            style = AppType.exploreLabel,
-            color = AppColors.inkSoft,
-        )
-    }
-}
+fun CheckInCard(
+    checkIn: CheckInCardState,
+    onClickCta: () -> Unit,
+    onClickSkip: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val copy = checkInCopy(checkIn)
+    val palette = checkInPalette(checkIn)
 
-/** The orange Meditate hero card: title + preset tag, play button, "Find your Zen" strip. */
-@Composable
-fun MeditateHeroCard(durationMin: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val cardLabel = stringResource(R.string.home_meditate_content_description, durationMin)
-    Column(
-        modifier
-            .fillMaxWidth()
-            .shadow(heroShadow, AppShapes.card, ambientColor = AppColors.accent, spotColor = AppColors.accent)
-            .clip(AppShapes.card)
-            .background(AppColors.accent)
-            .clickable(onClick = onClick)
-            .semantics { contentDescription = cardLabel }
-            .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 18.dp),
-    ) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column {
-                Text(
-                    text = stringResource(R.string.home_meditate_title),
-                    style = AppType.cardTitle,
-                    color = AppColors.textOnDark,
-                )
-                Text(
-                    text = stringResource(R.string.home_meditate_tag),
-                    style = AppType.eyebrow,
-                    color = AppColors.textOnDarkSoft,
-                    modifier = Modifier.padding(top = 3.dp),
-                )
-            }
-            Box(
-                Modifier
-                    .size(HomeConstants.heroIconSize)
-                    .clip(CircleShape)
-                    .background(AppColors.surfaceWhite),
-                contentAlignment = Alignment.Center,
-            ) {
-                PlayIcon(Modifier.size(16.dp), tint = AppColors.accent)
-            }
-        }
-        Row(
+    Box(modifier.fillMaxWidth()) {
+        Column(
             Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp)
-                .clip(AppShapes.input)
-                .background(AppColors.textOnDark.copy(alpha = 0.22f))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                .clip(AppShapes.card)
+                .background(palette.cardBackground)
+                .let {
+                    if (palette.glowBorder != null) {
+                        it.border(1.5.dp, palette.glowBorder, AppShapes.card)
+                    } else {
+                        it
+                    }
+                }
+                .padding(horizontal = 22.dp, vertical = 20.dp),
         ) {
-            SproutMascot(
-                modifier = Modifier.size(HomeConstants.heroMascotSize),
-                expression = SproutExpression.Calm,
-                bodyColor = AppColors.surfaceWhite,
-                showCheeks = false,
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                if (checkIn is CheckInCardState.SensePreLit) {
+                    Box(Modifier.size(dotSize).clip(CircleShape).background(AppColors.accent))
+                }
+                Text(text = copy.eyebrow, style = AppType.eyebrowWide, color = palette.eyebrowColor)
+            }
+            Text(
+                text = copy.title,
+                style = AppType.sectionTitle,
+                color = palette.titleColor,
+                modifier = Modifier.padding(top = 8.dp),
             )
             Text(
-                text = stringResource(R.string.home_meditate_prompt),
-                style = AppType.heroPrompt,
-                color = AppColors.textOnDark,
+                text = copy.subtitle,
+                style = AppType.body,
+                color = palette.subtitleColor,
+                modifier = Modifier.padding(top = 7.dp),
+            )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .clip(AppShapes.button)
+                    .background(palette.ctaBackground)
+                    .clickable(onClick = onClickCta)
+                    .padding(vertical = 15.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(text = copy.cta, style = AppType.button, color = palette.ctaInk)
+            }
+            Text(
+                text = copy.skip,
+                style = AppType.caption,
+                color = palette.skipColor,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp)
+                    .clickable(onClick = onClickSkip),
             )
         }
-    }
-}
 
-/** The sand-yellow Deep Breathing tile with the little breath waves. */
-@Composable
-fun BreathingTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Column(
-        modifier
-            .height(AppDimens.tileHeight)
-            .clip(AppShapes.card)
-            .background(AppColors.breathTile)
-            .clickable(onClick = onClick)
-            .padding(AppDimens.tilePadding),
-    ) {
-        Text(
-            text = stringResource(R.string.home_deep_breathing),
-            style = AppType.eyebrow,
-            color = AppColors.breathTileInk,
-        )
-        BreathIcon(
+        SproutMascot(
             modifier = Modifier
-                .padding(top = 8.dp)
-                .size(width = tileWaveWidth, height = tileWaveHeight),
-            tint = AppColors.breathTileWave,
+                .align(Alignment.TopEnd)
+                .offset(x = -mascotOffsetX, y = mascotOffsetY)
+                .size(HomeConstants.checkInMascotSize),
+            expression = if (checkIn is CheckInCardState.SensePreLit) SproutExpression.Happy else SproutExpression.Calm,
         )
     }
 }
 
-/** The teal Custom tile: dashed "+" circle over the label. */
+private data class CheckInCopy(
+    val eyebrow: String,
+    val title: String,
+    val subtitle: String,
+    val cta: String,
+    val skip: String,
+)
+
+private data class CheckInPalette(
+    val cardBackground: Color,
+    val eyebrowColor: Color,
+    val titleColor: Color,
+    val subtitleColor: Color,
+    val ctaBackground: Color,
+    val ctaInk: Color,
+    val skipColor: Color,
+    val glowBorder: Color? = null,
+)
+
 @Composable
-fun CustomTile(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun checkInCopy(checkIn: CheckInCardState): CheckInCopy = when (checkIn) {
+    is CheckInCardState.Resting -> CheckInCopy(
+        eyebrow = stringResource(R.string.home_checkin_eyebrow),
+        title = stringResource(R.string.home_checkin_title),
+        subtitle = stringResource(R.string.home_checkin_subtitle),
+        cta = stringResource(R.string.home_checkin_cta),
+        skip = stringResource(R.string.home_checkin_skip),
+    )
+    is CheckInCardState.SensePreLit -> CheckInCopy(
+        eyebrow = stringResource(R.string.home_checkin_sense_eyebrow),
+        title = stringResource(R.string.home_checkin_sense_title),
+        subtitle = stringResource(R.string.home_checkin_sense_subtitle),
+        cta = stringResource(R.string.home_checkin_cta),
+        skip = stringResource(R.string.home_checkin_sense_skip),
+    )
+    is CheckInCardState.Night -> CheckInCopy(
+        eyebrow = stringResource(R.string.home_checkin_eyebrow),
+        title = stringResource(R.string.home_checkin_night_title),
+        subtitle = stringResource(R.string.home_checkin_night_subtitle),
+        cta = stringResource(R.string.home_checkin_cta),
+        skip = stringResource(R.string.home_checkin_night_skip),
+    )
+}
+
+private fun checkInPalette(checkIn: CheckInCardState): CheckInPalette = when (checkIn) {
+    is CheckInCardState.Resting -> CheckInPalette(
+        cardBackground = AppColors.surfaceWhite,
+        eyebrowColor = AppColors.inkMuted,
+        titleColor = AppColors.ink,
+        subtitleColor = AppColors.inkBody,
+        ctaBackground = AppColors.teal,
+        ctaInk = AppColors.textOnDark,
+        skipColor = AppColors.inkMuted,
+    )
+    is CheckInCardState.SensePreLit -> CheckInPalette(
+        cardBackground = AppColors.surfaceWhite,
+        eyebrowColor = AppColors.accentDark,
+        titleColor = AppColors.ink,
+        subtitleColor = AppColors.inkBody,
+        ctaBackground = AppColors.accent,
+        ctaInk = AppColors.textOnDark,
+        skipColor = AppColors.inkMuted,
+        glowBorder = AppColors.accent.copy(alpha = 0.5f),
+    )
+    is CheckInCardState.Night -> CheckInPalette(
+        cardBackground = HomeTone.nightCard,
+        eyebrowColor = HomeTone.nightInkMuted,
+        titleColor = HomeTone.nightInk,
+        subtitleColor = HomeTone.nightInkMuted,
+        ctaBackground = HomeTone.nightCta,
+        ctaInk = HomeTone.nightInk,
+        skipColor = HomeTone.nightInkMuted,
+    )
+}
+
+/** One small stat tile ("TODAY" / "NEXT NUDGE"): eyebrow label, big value, small sub-line. */
+@Composable
+fun HomeStatTile(
+    eyebrow: String,
+    value: String,
+    sub: String,
+    eyebrowColor: Color,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier
-            .height(AppDimens.tileHeight)
             .clip(AppShapes.card)
-            .background(AppColors.customTile)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+            .background(AppColors.surfaceWarm)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
     ) {
-        Box(Modifier.size(dashedCircleSize), contentAlignment = Alignment.Center) {
-            Canvas(Modifier.fillMaxSize()) {
-                drawCircle(
-                    color = AppColors.textOnDark.copy(alpha = 0.7f),
-                    style = Stroke(
-                        width = 2.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(
-                            floatArrayOf(6.dp.toPx(), 6.dp.toPx()),
-                        ),
-                    ),
-                )
-            }
-            PlusIcon(Modifier.size(20.dp))
-        }
+        Text(text = eyebrow, style = AppType.eyebrow, color = eyebrowColor)
         Text(
-            text = stringResource(R.string.home_custom),
-            style = AppType.paceLabel,
-            color = AppColors.textOnDark,
+            text = value,
+            style = AppType.sectionTitle,
+            color = AppColors.ink,
+            modifier = Modifier.padding(top = 6.dp),
         )
+        Text(text = sub, style = AppType.caption, color = AppColors.inkMuted)
     }
 }
 
-/** The white Mindful Tip card: Sprout beside the tip copy. */
+/** A tappable quick-access row: icon chip, title + sub, trailing chevron. */
 @Composable
-fun MindfulTipCard(body: String, modifier: Modifier = Modifier) {
+fun HomeQuickActionRow(
+    title: String,
+    sub: String,
+    icon: @Composable (Modifier) -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier
             .fillMaxWidth()
-            .clip(AppShapes.tipCard)
+            .clip(AppShapes.card)
             .background(AppColors.surfaceWhite)
-            .border(1.5.dp, AppColors.hairlineCard, AppShapes.tipCard)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .clickable(onClick = onClick)
+            .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(HomeConstants.gridSpacing),
+        horizontalArrangement = Arrangement.spacedBy(HomeConstants.cardSpacing),
     ) {
-        SproutMascot(
-            modifier = Modifier.size(HomeConstants.tipMascotSize),
-            expression = SproutExpression.Happy,
+        Box(
+            Modifier
+                .size(HomeConstants.quickRowIconSize)
+                .clip(AppShapes.input)
+                .background(AppColors.surfaceWarm),
+            contentAlignment = Alignment.Center,
+        ) {
+            icon(Modifier.size(22.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(text = title, style = AppType.headerTitle, color = AppColors.ink)
+            Text(text = sub, style = AppType.caption, color = AppColors.inkMuted)
+        }
+        BackIcon(
+            modifier = Modifier.size(16.dp).rotate(180f),
+            tint = AppColors.inkMuted,
         )
-        Text(text = body, style = AppType.tipBody, color = AppColors.inkSoft)
     }
 }
 
@@ -213,7 +265,6 @@ fun CelebrationBannerCard(title: String, message: String, modifier: Modifier = M
     Row(
         modifier
             .fillMaxWidth()
-            .shadow(bannerShadow, AppShapes.panel, ambientColor = AppColors.teal, spotColor = AppColors.teal)
             .clip(AppShapes.panel)
             .background(AppColors.teal)
             .padding(horizontal = 18.dp, vertical = 14.dp),

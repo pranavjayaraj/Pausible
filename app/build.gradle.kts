@@ -24,6 +24,8 @@ dependencies {
     implementation(project(":feature:home:api"))
     implementation(project(":feature:sessions"))
     implementation(project(":feature:sessions:api"))
+    implementation(project(":feature:checkin"))
+    implementation(project(":feature:checkin:api"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:profile:api"))
     implementation(project(":feature:mood"))
