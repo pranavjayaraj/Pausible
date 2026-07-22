@@ -2,6 +2,7 @@ package com.reset.feature.checkin
 
 import androidx.lifecycle.SavedStateHandle
 import com.reset.core.mvi.BaseViewModel
+import com.reset.feature.checkin.classify.NeedStateClassifier
 import com.reset.feature.checkin.navigation.CheckInIntent
 import com.reset.feature.checkin.navigation.CheckInSideEffect
 import com.reset.feature.sessions.api.SessionDestination
@@ -20,9 +21,11 @@ import com.reset.model.domain.preferences.PreferencesRepository
 import com.reset.model.domain.sense.SenseSuggestionRepository
 import com.reset.navigation.Navigator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.orbitmvi.orbit.syntax.simple.SimpleSyntax
 import org.orbitmvi.orbit.syntax.simple.intent
+import org.orbitmvi.orbit.syntax.simple.postSideEffect
 import org.orbitmvi.orbit.syntax.simple.reduce
 import javax.inject.Inject
 
@@ -43,6 +46,7 @@ class CheckInViewModel @Inject constructor(
     private val preferencesRepository: PreferencesRepository,
     private val senseSuggestionRepository: SenseSuggestionRepository,
     private val timeProvider: TimeProvider,
+    private val needStateClassifier: NeedStateClassifier,
 ) : BaseViewModel<CheckInState, CheckInSideEffect>(savedStateHandle) {
 
     override fun initialState() = CheckInState.getDefault()
@@ -53,6 +57,10 @@ class CheckInViewModel @Inject constructor(
 
     fun handleCheckInIntent(intent: CheckInIntent) = when (intent) {
         is CheckInIntent.SelectChip -> selectChip(intent.chipId)
+        is CheckInIntent.SetInputMode -> setInputMode(intent.mode)
+        is CheckInIntent.ChatTextChanged -> chatTextChanged(intent.text)
+        CheckInIntent.SendChat -> sendChat()
+        CheckInIntent.MicTap -> micTap()
         CheckInIntent.AnswerWoundUp -> answerWoundUp()
         CheckInIntent.AnswerWornOut -> answerWornOut()
         CheckInIntent.AnswerNeckShoulders -> answerNeckShoulders()
@@ -83,10 +91,78 @@ class CheckInViewModel @Inject constructor(
     }
 
     private fun selectChip(chipId: ChipId) = intent {
+        reduce { state.copy(originInputMethod = InputMethod.CHIP) }
         if (chipId.hasFollowUp) {
             reduce { state.copy(step = CheckInStep.FollowUp(chipId.needState)) }
         } else {
             resolveAndOffer(chipId.needState)
+        }
+    }
+
+    private fun setInputMode(mode: InputMode) = intent {
+        reduce { state.copy(inputMode = mode) }
+        if (mode == InputMode.Voice) postSideEffect(CheckInSideEffect.VoiceComingSoon)
+    }
+
+    private fun chatTextChanged(text: String) = intent {
+        reduce { state.copy(chatText = text) }
+    }
+
+    private fun micTap() = intent { postSideEffect(CheckInSideEffect.VoiceComingSoon) }
+
+    /**
+     * Text → need, the second writer to the NeedState seam. The classifier's closed output
+     * maps cleanly onto the existing flow: a confident need routes exactly like a chip; an
+     * ambiguity that matches a binary follow-up pair routes to that clarifier; crisis and
+     * no-match take their escapes. Raw text never leaves this method — only the derived need.
+     */
+    private fun sendChat() = intent {
+        val text = state.chatText
+        if (text.isBlank()) return@intent
+
+        when (val result = needStateClassifier.classify(text)) {
+            // Crisis and NoMatch take their escapes without marking the input method (NoMatch
+            // deliberately emits no state, so its nudge side effect stays first in the stream).
+            NeedStateClassifier.Result.Crisis ->
+                reduce { state.copy(step = CheckInStep.SupportResources) }
+
+            NeedStateClassifier.Result.NoMatch ->
+                postSideEffect(CheckInSideEffect.UnrecognizedText)
+
+            is NeedStateClassifier.Result.Confident -> {
+                reduce { state.copy(originInputMethod = InputMethod.TEXT) }
+                routeNeed(result.needState)
+            }
+
+            is NeedStateClassifier.Result.Ambiguous -> {
+                reduce { state.copy(originInputMethod = InputMethod.TEXT) }
+                val followUp = followUpFor(result.top, result.second)
+                if (followUp != null) {
+                    reduce { state.copy(step = CheckInStep.FollowUp(followUp)) }
+                } else {
+                    routeNeed(result.top)
+                }
+            }
+        }
+    }
+
+    private suspend fun SimpleSyntax<CheckInState, CheckInSideEffect>.routeNeed(needState: NeedState) {
+        val hasFollowUp = needState == NeedState.WOUND_UP || needState == NeedState.BODY_TENSION
+        if (hasFollowUp) {
+            reduce { state.copy(step = CheckInStep.FollowUp(needState)) }
+        } else {
+            resolveAndOffer(needState)
+        }
+    }
+
+    /** The two known binary clarifiers map onto exactly these ambiguous pairs, so a typed
+     *  "stressed and wiped" or "stiff wrists" lands on the same follow-up a chip would. */
+    private fun followUpFor(a: NeedState, b: NeedState): NeedState? {
+        val pair = setOf(a, b)
+        return when {
+            pair == setOf(NeedState.WOUND_UP, NeedState.DRAINED) -> NeedState.WOUND_UP
+            pair == setOf(NeedState.BODY_TENSION, NeedState.HAND_STRAIN) -> NeedState.BODY_TENSION
+            else -> null
         }
     }
 
@@ -99,17 +175,26 @@ class CheckInViewModel @Inject constructor(
 
     private fun answerWristsHands() = intent { resolveAndOffer(NeedState.HAND_STRAIN) }
 
-    /** Chips → NeedState is the input layer's whole job; this is the seam boundary — nothing
-     *  past this point ever sees a [ChipId] again, only [needState]. */
+    /** Input → NeedState is the input layer's whole job (chips or text); this is the seam
+     *  boundary — nothing past here ever sees a [ChipId] or raw text again, only [needState].
+     *  A brief "finding" beat covers the selection so it reads as considered, not instant. */
     private suspend fun SimpleSyntax<CheckInState, CheckInSideEffect>.resolveAndOffer(needState: NeedState) {
+        reduce { state.copy(step = CheckInStep.Finding) }
+        val startMs = timeProvider.nowMillis()
+
         val nowMillis = timeProvider.nowMillis()
         val context = selectionContext(nowMillis)
         val selection = sessionSelectorRepository.select(needState, context)
-        val rowId = checkInPropensityLog.logSelection(needState, InputMethod.CHIP, selection, nowMillis)
+        val rowId = checkInPropensityLog.logSelection(needState, state.originInputMethod, selection, nowMillis)
         breakPreferencesRepository.recordNeedStateEcho(needState)
 
         val primary = offeredSessionFor(selection.primaryScriptId)
         val alternate = offeredSessionFor(selection.alternateScriptId)
+
+        val elapsed = timeProvider.nowMillis() - startMs
+        if (elapsed < CheckInConstants.FINDING_MIN_DWELL_MS) {
+            delay(CheckInConstants.FINDING_MIN_DWELL_MS - elapsed)
+        }
         reduce {
             state.copy(
                 step = CheckInStep.Offer(
@@ -185,13 +270,13 @@ class CheckInViewModel @Inject constructor(
         navigator.switchTab(SessionsDestination)
     }
 
-    /** No progress indicators, no stack to unwind — back always returns to the grid from
-     *  anywhere; from the grid itself it leaves the feature. */
+    /** No progress indicators, no stack to unwind — back always returns to the input screen
+     *  from anywhere; from the input screen itself it leaves the feature. */
     private fun handleBackPress() = intent {
-        if (state.step == CheckInStep.ChipGrid) {
+        if (state.step == CheckInStep.Input) {
             navigator.pop()
         } else {
-            reduce { state.copy(step = CheckInStep.ChipGrid) }
+            reduce { state.copy(step = CheckInStep.Input) }
         }
     }
 }

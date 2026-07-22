@@ -10,6 +10,9 @@ object CheckInConstants {
      *  frequency cap (currently The Plunge's 4 hours). */
     const val RECENT_COMPLETIONS_LOOKBACK_MS = 24 * 60 * 60 * 1000L
 
+    /** Minimum "Finding your minute…" dwell so selection reads as considered, not instant. */
+    const val FINDING_MIN_DWELL_MS = 900L
+
     // ── Dimens ────────────────────────────────────────────────
     val chipHeight = 78.dp
     val chipGap = 13.dp

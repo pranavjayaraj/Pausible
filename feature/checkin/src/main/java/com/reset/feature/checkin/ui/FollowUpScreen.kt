@@ -71,9 +71,9 @@ fun FollowUpScreen(
     }
 
     Box(modifier.fillMaxSize()) {
-        // The grid behind, dimmed and non-interactive — a scrim stands in for the design's
-        // blur (no full RenderEffect blur here, to keep this screen minSdk-simple).
-        ChipGridScreen(state = state, onIntent = {})
+        // The input screen behind, dimmed and non-interactive — a scrim stands in for the
+        // design's blur (no full RenderEffect blur here, to keep this screen minSdk-simple).
+        InputScreen(state = state, onIntent = {})
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = SCRIM_ALPHA)))
 
         AnimatedVisibility(

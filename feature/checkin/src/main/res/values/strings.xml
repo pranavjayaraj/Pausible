@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Chip grid -->
-    <string name="checkin_title">What\'s going on?</string>
-    <string name="checkin_subtitle">No wrong answers. One tap.</string>
-    <string name="checkin_just_browsing">just browsing</string>
-    <string name="checkin_heard">Heard. Finding your minute…</string>
+    <!-- Input (chat) screen -->
+    <string name="checkin_title">Check In</string>
+    <string name="checkin_prompt">What\'s going on right now? Tell me — I\'ll find you the right minute.</string>
+    <string name="checkin_mode_text">Text</string>
+    <string name="checkin_mode_voice">Voice</string>
+    <string name="checkin_text_placeholder">Type how you\'re feeling…</string>
+    <string name="checkin_send">Send</string>
+    <string name="checkin_voice_coming_soon">Voice is coming soon — type or tap a chip for now.</string>
+    <string name="checkin_voice_tap">Voice coming soon</string>
+    <string name="checkin_unrecognized">Didn\'t quite catch that — tap one below?</string>
+    <string name="checkin_just_browsing">Not now — just browsing</string>
+    <string name="checkin_finding">Finding your minute…</string>
     <string name="checkin_sense_caption">Sprout\'s guess — you\'ve been sitting a while. Yours to change.</string>
 
     <string name="checkin_chip_stressed">Stressed</string>

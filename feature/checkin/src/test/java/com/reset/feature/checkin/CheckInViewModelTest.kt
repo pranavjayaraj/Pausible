@@ -1,7 +1,9 @@
 package com.reset.feature.checkin
 
 import androidx.lifecycle.SavedStateHandle
+import com.reset.feature.checkin.classify.LexiconNeedStateClassifier
 import com.reset.feature.checkin.navigation.CheckInIntent
+import com.reset.feature.checkin.navigation.CheckInSideEffect
 import com.reset.feature.sessions.api.SessionDestination
 import com.reset.feature.sessions.api.SessionsDestination
 import com.reset.model.domain.checkin.InputMethod
@@ -39,6 +41,7 @@ class CheckInViewModelTest {
             preferencesRepository,
             senseSuggestionRepository,
             timeProvider,
+            LexiconNeedStateClassifier(),
         )
 
         /** Suspends until the next navigation event — the race-free assertion point for
@@ -362,7 +365,7 @@ class CheckInViewModelTest {
             awaitUntil { it.step is CheckInStep.Offer }
 
             containerHost.handleCheckInIntent(CheckInIntent.HandleBackPress)
-            awaitUntil { it.step == CheckInStep.ChipGrid }
+            awaitUntil { it.step == CheckInStep.Input }
 
             containerHost.handleCheckInIntent(CheckInIntent.HandleBackPress)
             assertEquals(NavEvent.Pop, harness.awaitNavEvent())
@@ -380,6 +383,106 @@ class CheckInViewModelTest {
             containerHost.handleCheckInIntent(CheckInIntent.OpenSupportResources)
 
             awaitUntil { it.step == CheckInStep.SupportResources }
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    // ------------------------------------------------------------ text input (classifier path)
+
+    @Test
+    fun `confident text resolves to an offer and logs InputMethod TEXT`() = runTest {
+        val harness = Harness()
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("my eyes are so tired and blurry"))
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            val offer = awaitUntil { it.step is CheckInStep.Offer }.step as CheckInStep.Offer
+            assertEquals(NeedState.EYE_STRAIN, offer.needState)
+            assertEquals(InputMethod.TEXT, harness.checkInPropensityLog.logged.single().inputMethod)
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `confident text for a need with a follow-up routes to the clarifier`() = runTest {
+        val harness = Harness()
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("my neck is killing me"))
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            val followUp = awaitUntil { it.step is CheckInStep.FollowUp }.step as CheckInStep.FollowUp
+            assertEquals(NeedState.BODY_TENSION, followUp.originNeedState)
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `ambiguous text maps onto the matching binary follow-up`() = runTest {
+        val harness = Harness()
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            // "stressed and wiped out" ties WOUND_UP↔DRAINED → the wound-up follow-up.
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("stressed and wiped out"))
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            val followUp = awaitUntil { it.step is CheckInStep.FollowUp }.step as CheckInStep.FollowUp
+            assertEquals(NeedState.WOUND_UP, followUp.originNeedState)
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `crisis text short-circuits to support resources`() = runTest {
+        val harness = Harness()
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("I want to disappear"))
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            awaitUntil { it.step == CheckInStep.SupportResources }
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `unrecognized text stays on input and nudges toward the chips`() = runTest {
+        // Daytime, quiet hours off → load() reduces to the (equal) default and never emits,
+        // so the only state item is ChatTextChanged; SendChat's NoMatch emits no state, so
+        // the nudge side effect is cleanly next in the unified stream.
+        val harness = Harness(
+            preferencesRepository = FakePreferencesRepository(HomePreferences(quietHoursEnabled = false)),
+            timeProvider = FakeTimeProvider(hour = 15),
+        )
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("my stomach hurts"))
+            awaitUntil { it.chatText == "my stomach hurts" }
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            assertEquals(CheckInSideEffect.UnrecognizedText, awaitSideEffect())
+            assertTrue(harness.checkInPropensityLog.logged.isEmpty())
 
             cancelAndIgnoreRemainingItems()
         }
