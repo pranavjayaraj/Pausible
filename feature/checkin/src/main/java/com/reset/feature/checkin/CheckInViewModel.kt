@@ -11,6 +11,7 @@ import com.reset.model.domain.ReminderTimeCalculator
 import com.reset.model.domain.TimeProvider
 import com.reset.model.domain.breakprefs.BreakPreferencesRepository
 import com.reset.model.domain.checkin.CheckInPropensityLog
+import com.reset.model.domain.checkin.EmbedModelManager
 import com.reset.model.domain.checkin.InputMethod
 import com.reset.model.domain.checkin.NeedState
 import com.reset.model.domain.checkin.SelectionContext
@@ -47,6 +48,7 @@ class CheckInViewModel @Inject constructor(
     private val senseSuggestionRepository: SenseSuggestionRepository,
     private val timeProvider: TimeProvider,
     private val needStateClassifier: NeedStateClassifier,
+    private val embedModelManager: EmbedModelManager,
 ) : BaseViewModel<CheckInState, CheckInSideEffect>(savedStateHandle) {
 
     override fun initialState() = CheckInState.getDefault()
@@ -126,8 +128,10 @@ class CheckInViewModel @Inject constructor(
             NeedStateClassifier.Result.Crisis ->
                 reduce { state.copy(step = CheckInStep.SupportResources) }
 
-            NeedStateClassifier.Result.NoMatch ->
+            NeedStateClassifier.Result.NoMatch -> {
                 postSideEffect(CheckInSideEffect.UnrecognizedText)
+                maybeStartEmbedModelFetch()
+            }
 
             is NeedStateClassifier.Result.Confident -> {
                 reduce { state.copy(originInputMethod = InputMethod.TEXT) }
@@ -142,6 +146,32 @@ class CheckInViewModel @Inject constructor(
                 } else {
                     routeNeed(result.top)
                 }
+            }
+        }
+    }
+
+    /**
+     * Kicks off the Tier-2 model's background download the first time text classification
+     * needs it and it isn't ready — idempotent (a second unresolved Send while one is
+     * already in flight is a no-op) and never blocks Send: this input already fell back to
+     * Tier-1 + the always-visible chips via [CheckInSideEffect.UnrecognizedText]. A declined
+     * or failed download is silent — [state.embedModelFetching] just clears — since chips
+     * already served this input; there is nothing left to retry for *this* Send.
+     */
+    private fun maybeStartEmbedModelFetch() = intent {
+        if (state.embedModelFetching) return@intent
+        if (embedModelManager.isReady()) return@intent
+        reduce { state.copy(embedModelFetching = true) }
+        embedModelManager.fetch().collect { fetchState ->
+            when (fetchState) {
+                is EmbedModelManager.FetchState.Downloading -> Unit
+                EmbedModelManager.FetchState.WaitingForWifi -> Unit
+                EmbedModelManager.FetchState.RequiresConfirmation ->
+                    postSideEffect(CheckInSideEffect.RequestCellularConfirmation)
+                EmbedModelManager.FetchState.Downloaded ->
+                    reduce { state.copy(embedModelFetching = false) }
+                is EmbedModelManager.FetchState.Failed ->
+                    reduce { state.copy(embedModelFetching = false) }
             }
         }
     }

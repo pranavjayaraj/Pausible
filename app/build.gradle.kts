@@ -13,6 +13,11 @@ android {
         versionName = "1.0.0"
         multiDexEnabled = true
     }
+    // The Tier-2 embedding model's on-demand Play Asset Delivery pack — data only, no code
+    // (see :model_pack/README.md). Only resolves via a real Play-delivered .aab install;
+    // a sideloaded debug APK never sees it, and the app must degrade gracefully when it
+    // can't (EmbedModelManager.isReady() == false → Tier-1 lexicon + chips only).
+    assetPacks += ":model_pack"
 }
 
 dependencies {
@@ -26,6 +31,9 @@ dependencies {
     implementation(project(":feature:sessions:api"))
     implementation(project(":feature:checkin"))
     implementation(project(":feature:checkin:api"))
+    // Tier-2 text embedding — links in the concrete MediaPipe TextEmbedder; :feature:checkin
+    // itself only ever sees the :model interface.
+    implementation(project(":text-embed"))
     implementation(project(":feature:profile"))
     implementation(project(":feature:profile:api"))
     implementation(project(":feature:mood"))

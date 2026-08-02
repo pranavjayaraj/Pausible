@@ -1,5 +1,6 @@
 package com.reset.feature.checkin.ui
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
@@ -14,14 +15,19 @@ import com.reset.feature.checkin.CheckInViewModel
 import com.reset.feature.checkin.R
 import com.reset.feature.checkin.navigation.CheckInIntent
 import com.reset.feature.checkin.navigation.CheckInSideEffect
+import com.reset.model.domain.checkin.EmbedModelManager
 
 /**
  * Composable entry point for the Check In feature: conversational input → optional follow-up
  * → "finding" beat → offer. Intra-feature transitions are just state (rendered from
  * [CheckInStep]); leaving goes through the ViewModel's injected [com.reset.navigation.Navigator].
+ *
+ * [embedModelManager] is handed down from the host (like [com.reset.model.domain.SoundController]
+ * is to `SessionRoute`) purely so [CheckInSideEffect.RequestCellularConfirmation] can resolve
+ * a live [Activity] transiently, here — never stored, and never on the ViewModel.
  */
 @Composable
-fun CheckInRoute() {
+fun CheckInRoute(embedModelManager: EmbedModelManager) {
     val viewModel: CheckInViewModel = hiltViewModel()
     val state by viewModel.stateFlow().collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -29,11 +35,13 @@ fun CheckInRoute() {
     val unrecognized = stringResource(R.string.checkin_unrecognized)
     val voiceSoon = stringResource(R.string.checkin_voice_coming_soon)
     LifecycleAwareLaunchedEffect(viewModel.sideFlow()) { effect ->
-        val message = when (effect) {
-            CheckInSideEffect.UnrecognizedText -> unrecognized
-            CheckInSideEffect.VoiceComingSoon -> voiceSoon
+        when (effect) {
+            CheckInSideEffect.UnrecognizedText -> Toast.makeText(context, unrecognized, Toast.LENGTH_SHORT).show()
+            CheckInSideEffect.VoiceComingSoon -> Toast.makeText(context, voiceSoon, Toast.LENGTH_SHORT).show()
+            CheckInSideEffect.RequestCellularConfirmation -> {
+                (context as? Activity)?.let { activity -> embedModelManager.confirmCellularDownload(activity) }
+            }
         }
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 
     BackHandler { viewModel.handleCheckInIntent(CheckInIntent.HandleBackPress) }

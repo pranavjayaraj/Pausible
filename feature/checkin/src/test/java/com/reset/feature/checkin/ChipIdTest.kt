@@ -79,9 +79,27 @@ class ChipIdTest {
     }
 
     @Test
-    fun `chip identities are twelve, covering every NeedState exactly once`() {
+    fun `chip identities are twelve, covering every chip-reachable NeedState exactly once`() {
         val allNeedStatesFromChips = ChipId.entries.map { it.needState }.toSet()
-        assertEquals(NeedState.entries.toSet(), allNeedStatesFromChips)
+        assertEquals(NeedState.entries.filterNot { it.textOnly }.toSet(), allNeedStatesFromChips)
         assertEquals(12, ChipId.entries.size)
+    }
+
+    @Test
+    fun `text-only needs are exactly the five no chip can reach`() {
+        val chipReachable = ChipId.entries.map { it.needState }.toSet()
+        val textOnly = NeedState.entries.filter { it.textOnly }.toSet()
+
+        assertEquals(
+            setOf(
+                NeedState.CONFUSED_LOST,
+                NeedState.TASK_PARALYSIS,
+                NeedState.SENSORY_OVERLOAD,
+                NeedState.BIOLOGICAL_DEPLETION,
+                NeedState.ACCOMPLISHED_FLOW,
+            ),
+            textOnly,
+        )
+        assertTrue(textOnly.none { it in chipReachable })
     }
 }

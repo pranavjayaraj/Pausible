@@ -46,3 +46,11 @@ include(":sense-store")
 project(":sense-store").projectDir = file("library/sense-store")
 include(":sense-delivery")
 project(":sense-delivery").projectDir = file("library/sense-delivery")
+// Tier-2 on-device text embedding — its own library module (not :feature:checkin, and not
+// a dynamic feature module: it ships in the base APK; only the model *data* is deferred,
+// via the :model_pack Play Asset Delivery pack below).
+include(":text-embed")
+project(":text-embed").projectDir = file("library/text-embed")
+// Play Asset Delivery, on-demand: the ~25MB sentence-encoder model, no code. See
+// model_pack/build.gradle.kts.
+include(":model_pack")

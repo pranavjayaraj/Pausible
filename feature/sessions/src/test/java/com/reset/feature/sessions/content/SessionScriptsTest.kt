@@ -25,6 +25,11 @@ class SessionScriptsTest {
         SessionScripts.THE_SWEEP,
         SessionScripts.THE_PLUNGE,
         SessionScripts.REACH_OUT,
+        SessionScripts.THE_DETOUR,
+        SessionScripts.THE_FIRST_MINUTE,
+        SessionScripts.HEAD_DOWN,
+        SessionScripts.TOP_UP,
+        SessionScripts.THE_LOG,
     )
 
     // ------------------------------------------------------------ integrity

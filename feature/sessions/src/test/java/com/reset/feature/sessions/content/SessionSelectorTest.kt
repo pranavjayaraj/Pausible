@@ -65,7 +65,13 @@ class SessionSelectorTest {
             NeedState.CANT_WIND_DOWN to SessionScripts.EMBER,
             NeedState.OVERWHELMED to SessionScripts.THE_PLUNGE,
             NeedState.DISCONNECTED to SessionScripts.REACH_OUT,
+            NeedState.CONFUSED_LOST to SessionScripts.THE_DETOUR,
+            NeedState.TASK_PARALYSIS to SessionScripts.THE_FIRST_MINUTE,
+            NeedState.SENSORY_OVERLOAD to SessionScripts.HEAD_DOWN,
+            NeedState.BIOLOGICAL_DEPLETION to SessionScripts.TOP_UP,
+            NeedState.ACCOMPLISHED_FLOW to SessionScripts.THE_LOG,
         )
+        assertEquals("every NeedState needs a shortlist", NeedState.entries.toSet(), expected.keys)
         for ((need, script) in expected) {
             val selection = SessionSelector.select(need, fullAccess())
             assertEquals("$need should resolve to ${script.id}", script.id, selection.primaryScriptId)
@@ -93,6 +99,22 @@ class SessionSelectorTest {
     fun `DISCONNECTED without a close person falls through to Warmth`() {
         val selection = SessionSelector.select(NeedState.DISCONNECTED, fullAccess(closePerson = false))
         assertEquals(SessionScripts.WARMTH.id, selection.primaryScriptId)
+    }
+
+    @Test
+    fun `BIOLOGICAL_DEPLETION without a tap falls through to Step Outside`() {
+        val selection = SessionSelector.select(NeedState.BIOLOGICAL_DEPLETION, fullAccess(waterAccess = false))
+        assertEquals(SessionScripts.STEP_OUTSIDE.id, selection.primaryScriptId)
+        val topUpOutcome = selection.shortlist.first { it.scriptId == SessionScripts.TOP_UP.id }
+        assertEquals(GateReason.REQUIREMENT_UNMET, topUpOutcome.reason)
+    }
+
+    @Test
+    fun `night keeps Top Up servable — thirst does not observe quiet hours`() {
+        val selection = SessionSelector.select(NeedState.BIOLOGICAL_DEPLETION, fullAccess(isNight = true))
+        assertEquals(SessionScripts.TOP_UP.id, selection.primaryScriptId)
+        val topUpOutcome = selection.shortlist.first { it.scriptId == SessionScripts.TOP_UP.id }
+        assertEquals(null, topUpOutcome.reason)
     }
 
     // ------------------------------------------------------------ night veto

@@ -85,6 +85,7 @@ internal object NeedLexicon {
             "crushed" to MEDIUM, "buried" to MEDIUM, "falling apart" to MEDIUM, "swamped" to MEDIUM,
             "overload" to STRONG, "maxed out" to STRONG, "cant handle" to STRONG, "breaking point" to STRONG,
             "snowed under" to MEDIUM, "stretched thin" to MEDIUM, "no bandwidth" to MEDIUM,
+            "overburden" to STRONG, "weighed down" to MEDIUM, "too much on" to MEDIUM, "spread too thin" to MEDIUM,
         ),
         NeedState.DISCONNECTED to mapOf(
             "lonely" to STRONG, "alone" to STRONG, "isolat" to STRONG, "disconnect" to STRONG,
@@ -105,6 +106,49 @@ internal object NeedLexicon {
             "sat too long" to MEDIUM, "been sitting" to MEDIUM, "antsy" to MEDIUM, "cant sit still" to MEDIUM,
             "nothing to do" to MEDIUM, "twiddling" to MEDIUM, "pent up" to MEDIUM, "cabin fever" to STRONG,
             "stagnant" to MEDIUM, "stuck indoors" to MEDIUM,
+        ),
+        NeedState.CONFUSED_LOST to mapOf(
+            // "lost" stays MEDIUM: "I feel lost" is as often LOW_MOOD/DISCONNECTED as blocked.
+            "confus" to STRONG, "no idea" to STRONG, "dont understand" to STRONG, "lost" to MEDIUM,
+            "makes no sense" to STRONG, "blocked" to STRONG, "where to start" to STRONG,
+            "stuck on this" to MEDIUM, "going in circles" to STRONG, "figure out" to MEDIUM,
+            "clueless" to MEDIUM, "baffl" to MEDIUM, "puzzl" to MEDIUM, "unclear" to MEDIUM,
+            "need help" to MEDIUM, "second pair of eyes" to STRONG, "dead end" to MEDIUM,
+            "out of my depth" to STRONG, "in over my head" to STRONG, "mind is blank" to STRONG,
+        ),
+        NeedState.TASK_PARALYSIS to mapOf(
+            "cant start" to STRONG, "cant begin" to STRONG, "procrastinat" to STRONG,
+            "putting it off" to STRONG, "avoiding" to STRONG, "keep avoiding" to STRONG,
+            "dreading" to MEDIUM, "dread" to MEDIUM, "paralys" to STRONG, "frozen" to STRONG,
+            "freeze" to MEDIUM, "stalling" to MEDIUM, "cant get going" to STRONG,
+            "cant get started" to STRONG, "staring at it" to MEDIUM, "keep putting off" to STRONG,
+            "havent started" to STRONG, "delaying" to MEDIUM, "resist" to MEDIUM,
+        ),
+        NeedState.SENSORY_OVERLOAD to mapOf(
+            "too loud" to STRONG, "so loud" to STRONG, "noisy" to STRONG, "noise" to STRONG,
+            "too bright" to STRONG, "overstimulat" to STRONG, "sensory" to STRONG,
+            "too many people" to STRONG, "chatter" to MEDIUM, "open office" to MEDIUM,
+            "cant hear myself think" to STRONG, "loud" to MEDIUM, "bombard" to MEDIUM,
+            "notifications" to MEDIUM, "pinging" to MEDIUM, "constant pings" to STRONG,
+            "assault" to MEDIUM, "grating" to MEDIUM, "overstimulated" to STRONG,
+        ),
+        NeedState.BIOLOGICAL_DEPLETION to mapOf(
+            "hungry" to STRONG, "starving" to STRONG, "havent eaten" to STRONG, "forgot to eat" to STRONG,
+            "skipped lunch" to STRONG, "skipped breakfast" to STRONG, "blood sugar" to STRONG,
+            "thirsty" to STRONG, "dehydrat" to STRONG, "havent drank" to STRONG, "no water" to MEDIUM,
+            "need to pee" to STRONG, "bathroom" to MEDIUM, "restroom" to MEDIUM, "caffeine" to MEDIUM,
+            "withdrawal" to MEDIUM, "lightheaded" to MEDIUM, "dizzy" to MEDIUM, "hangry" to STRONG,
+            "stomach growl" to STRONG, "running on coffee" to STRONG,
+        ),
+        NeedState.ACCOMPLISHED_FLOW to mapOf(
+            // "flow" only as a phrase — the bare token also lives inside "workflow"/"overflow".
+            "in the zone" to STRONG, "deep work" to STRONG, "in flow" to STRONG, "flow state" to STRONG,
+            "crushing it" to STRONG,
+            "smashed it" to STRONG, "nailed it" to STRONG, "finished" to MEDIUM, "shipped" to STRONG,
+            "proud" to STRONG, "great day" to STRONG, "went well" to STRONG, "on a roll" to STRONG,
+            "productive" to STRONG, "momentum" to MEDIUM, "dont want to stop" to MEDIUM,
+            "figured it out" to MEDIUM, "cracked it" to MEDIUM, "relieved" to MEDIUM,
+            "weight off" to MEDIUM, "firing on all cylinders" to STRONG, "killing it" to MEDIUM,
         ),
     )
 

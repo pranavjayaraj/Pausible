@@ -6,6 +6,10 @@ import com.reset.model.domain.checkin.NeedState
  * The chip grid's own vocabulary — deliberately never exported past this feature. Session
  * selection consumes only [NeedState] (see [com.reset.model.domain.checkin]); chip identity,
  * label, and emoji stop here, at the one place that turns a tap into a need.
+ *
+ * Chips cover the twelve needs worth *scanning a grid for*. The rest ([NeedState.textOnly] —
+ * being stuck, not starting, noise, running on empty, a good run) are reachable by text only:
+ * they'd bloat a ten-chip grid past a glance, and nobody taps their way to "I'm in flow".
  */
 enum class ChipId(val needState: NeedState) {
     STRESSED(NeedState.WOUND_UP),

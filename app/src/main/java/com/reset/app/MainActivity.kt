@@ -40,6 +40,7 @@ import com.reset.feature.settings.api.SettingsDestination
 import com.reset.feature.settings.ui.SettingsRoute
 import com.reset.model.domain.SoundController
 import com.reset.model.domain.StartupState
+import com.reset.model.domain.checkin.EmbedModelManager
 import com.reset.navigation.Navigator
 import com.reset.navigation.ObserveNavigation
 import com.reset.navigation.Screen
@@ -70,6 +71,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var soundController: SoundController
+
+    @Inject
+    lateinit var embedModelManager: EmbedModelManager
 
     @Inject
     lateinit var reminderNotificationUtil: ReminderNotificationUtil
@@ -146,7 +150,7 @@ class MainActivity : ComponentActivity() {
 
                         composable<BuilderDestination> { BuilderRoute() }
 
-                        composable<CheckInDestination> { CheckInRoute() }
+                        composable<CheckInDestination> { CheckInRoute(embedModelManager) }
 
                         composable<SettingsDestination> { SettingsRoute() }
 

@@ -19,6 +19,43 @@ enum class NeedState {
     CANT_WIND_DOWN,
     OVERWHELMED,
     DISCONNECTED,
+
+    // ---------------------------------------------------------- text-only needs
+    // Below here: needs a person describes but wouldn't hunt for in a ten-chip grid
+    // (see [textOnly]). Appended, never reordered — the propensity log and the break
+    // preference echo both persist `name`, but PrototypeVectorCache keys its file by
+    // `ordinal`, so an insertion in the middle would silently mislabel a cached vector.
+
+    /** Blocked, no idea what the next step is — wants incubation, not calming. */
+    CONFUSED_LOST,
+
+    /** Knows the task, can't start it — the threat response to beginning, not overload. */
+    TASK_PARALYSIS,
+
+    /** Too much input (noise, light, people, pings) rather than too many tasks. */
+    SENSORY_OVERLOAD,
+
+    /** Hasn't eaten, drunk, or stood up — a body problem wearing a focus problem's clothes. */
+    BIOLOGICAL_DEPLETION,
+
+    /** The positive case: in flow or just landed a win. The break protects it or logs it. */
+    ACCOMPLISHED_FLOW,
+    ;
+
+    /**
+     * True for needs that only text can reach: the chip grid is a fixed ten (see `ChipId`),
+     * and these five are either too situational to scan for or — [ACCOMPLISHED_FLOW] — a state
+     * nobody opens a wellness app to *tap*. They still classify, select, and log exactly like
+     * chip-reachable needs; the only difference is the input method that can produce them.
+     */
+    val textOnly: Boolean
+        get() = this in TEXT_ONLY
+
+    companion object {
+        private val TEXT_ONLY = setOf(
+            CONFUSED_LOST, TASK_PARALYSIS, SENSORY_OVERLOAD, BIOLOGICAL_DEPLETION, ACCOMPLISHED_FLOW,
+        )
+    }
 }
 
 /** How a [NeedState] was resolved — logged with every selection for the propensity trail.

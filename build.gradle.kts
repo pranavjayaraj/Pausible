@@ -10,4 +10,7 @@ plugins {
     alias(libs.plugins.kotlin.kapt) apply false
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.ksp) apply false
+    // :model_pack (Play Asset Delivery, on-demand) — same AGP artifact/version as
+    // com.android.application, just a different plugin id.
+    alias(libs.plugins.android.assetPack) apply false
 }

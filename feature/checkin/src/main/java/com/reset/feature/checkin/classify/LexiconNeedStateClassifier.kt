@@ -7,7 +7,7 @@ import kotlin.math.max
 /**
  * On-device, dependency-free Tier-1 classifier: crisis-first, then a weighted-lexicon scorer
  * with negation/intensifier handling, then confidence thresholds. No network, no model — the
- * output set is only 12 needs (+ crisis/no-match), which is what makes open text tractable.
+ * output set is only 17 needs (+ crisis/no-match), which is what makes open text tractable.
  *
  * Matching is substring-on-normalized-text so curated roots catch inflections ("stress" →
  * "stressed", "typ" → "typing"); negation/intensifier use a token-window pass for single
@@ -17,7 +17,7 @@ import kotlin.math.max
  */
 class LexiconNeedStateClassifier @Inject constructor() : NeedStateClassifier {
 
-    override fun classify(text: String): NeedStateClassifier.Result {
+    override suspend fun classify(text: String): NeedStateClassifier.Result {
         val norm = normalize(text)
         if (norm.isBlank()) return NeedStateClassifier.Result.NoMatch
 

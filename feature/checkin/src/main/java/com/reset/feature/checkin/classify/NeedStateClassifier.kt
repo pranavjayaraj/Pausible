@@ -9,12 +9,14 @@ import com.reset.model.domain.checkin.NeedState
  * interchangeable producers: the only new thing text needs is *this* mapping.
  *
  * The output is deliberately a tiny closed set even though the input is open — the classifier
- * recognizes the 12 needs it knows and honestly punts everything else to [Result.NoMatch]
+ * recognizes the 17 needs it knows and honestly punts everything else to [Result.NoMatch]
  * (→ the quick chips) rather than guessing. Precision over recall: a wrong confident offer
  * erodes trust; a graceful "tap one instead" does not.
  */
 interface NeedStateClassifier {
-    fun classify(text: String): Result
+    /** Suspends because a Tier-2 escalation (see `CascadeNeedStateClassifier`) may run
+     *  on-device model inference; the pure Tier-1 lexicon path returns immediately. */
+    suspend fun classify(text: String): Result
 
     sealed interface Result {
         /** A clear winner — route straight to selection (or its follow-up). */

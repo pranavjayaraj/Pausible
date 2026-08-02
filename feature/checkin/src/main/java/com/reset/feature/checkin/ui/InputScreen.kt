@@ -231,6 +231,21 @@ private fun TextInput(state: CheckInState, onIntent: (CheckInIntent) -> Unit) {
     ) {
         Text(stringResource(R.string.checkin_send), style = AppType.button, color = AppColors.textOnDark)
     }
+
+    // Subtle, non-blocking — this Send's input already fell back to the chips above; this
+    // just says the model for *next* time is on its way.
+    if (state.embedModelFetching) {
+        Text(
+            text = stringResource(R.string.checkin_embed_model_fetching),
+            style = AppType.legal,
+            color = AppColors.inkFaint,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 340.dp)
+                .padding(top = 10.dp),
+        )
+    }
 }
 
 @Composable

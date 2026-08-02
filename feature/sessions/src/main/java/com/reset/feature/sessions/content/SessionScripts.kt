@@ -1036,12 +1036,316 @@ object SessionScripts {
         ),
     )
 
+    // ------------------------------------------------------------ The Detour
+
+    val THE_DETOUR = SessionScript(
+        id = "detour_v1",
+        displayName = "The Detour",
+        modality = Modality.MIND,
+        evidence = Evidence(
+            grade = 4,
+            citation = "Sio & Ormerod, 2009, Psychological Bulletin",
+            finding = "A meta-analysis of incubation studies: stepping away from a stuck " +
+                "problem improves solution rates versus working straight through, and an " +
+                "undemanding activity during the break beats resting or another hard task.",
+        ),
+        arrivalDefault = CopyPool(
+            listOf(
+                "Staring harder isn't working. That's not a you problem — it's how stuck works.",
+                "The answer isn't on this screen. Let's go somewhere else for two minutes.",
+                "Blocked is a signal to step back, not to push harder.",
+            ),
+        ),
+        guide = listOf(
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Say the problem in one plain sentence. Then hand it over and stop working on it.",
+                        "Name what you're stuck on, once, in normal words. That's the last thinking you do here.",
+                    ),
+                ),
+                dwellSec = 15,
+            ),
+            GuideStep.Move(
+                instruction = CopyPool(
+                    listOf(
+                        "Now stand up and go look at something far away — a window, the corridor, the kettle.",
+                        "Leave the desk. Anywhere that isn't this problem. Your back brain keeps working.",
+                    ),
+                ),
+                holdSec = 60,
+            ),
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Don't chase the answer. If it shows up, it'll show up on its own.",
+                        "Notice something ordinary out there. That's the whole assignment.",
+                    ),
+                ),
+                dwellSec = 20,
+                dimScreen = true, // the screen is the thing you were staring at
+            ),
+        ),
+        landingClose = CopyPool(
+            listOf(
+                "Whether or not it landed, you're not going back in at the same angle.",
+                "That's incubation — the least effortful problem-solving there is.",
+            ),
+        ),
+        landingBridge = CopyPool(
+            listOf(
+                "Back to it — start from the sentence you said, not the tab you left open.",
+                "Go on. If it's still stuck in ten minutes, ask someone. That's allowed.",
+            ),
+        ),
+    )
+
+    // ------------------------------------------------------------ The First Minute
+
+    val THE_FIRST_MINUTE = SessionScript(
+        id = "first_minute_v1",
+        displayName = "The First Minute",
+        modality = Modality.MIND,
+        evidence = Evidence(
+            grade = 4,
+            citation = "Gollwitzer & Sheeran, 2006, Advances in Experimental Social Psychology",
+            finding = "A meta-analysis of 94 studies: forming a specific when-where-how " +
+                "implementation intention produced a medium-to-large increase in follow-through " +
+                "over holding the goal alone — the effect is in naming the first concrete move.",
+        ),
+        arrivalDefault = CopyPool(
+            listOf(
+                "You know what the task is. Starting is the part that's broken. Let's fix that bit.",
+                "Not laziness — starting costs more than doing. We'll make the first move smaller.",
+                "The task isn't the problem. The first sixty seconds of it is.",
+            ),
+        ),
+        guide = listOf(
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Name the thing you're avoiding. Five words, no detail.",
+                        "What's the one you keep skipping past? Just name it.",
+                    ),
+                ),
+                dwellSec = 15,
+            ),
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Now shrink it: what's the actual first minute? Opening the file counts.",
+                        "What's the smallest physical first step — the one you could do badly?",
+                    ),
+                ),
+                dwellSec = 20,
+            ),
+            GuideStep.Move(
+                instruction = CopyPool(
+                    listOf(
+                        "Say it as a plan: 'when this ends, I'll do ___ for five minutes.' You can stop after five.",
+                        "Commit out loud: first move, five minutes, then you're free to quit.",
+                    ),
+                ),
+                holdSec = 15,
+            ),
+        ),
+        landingClose = CopyPool(
+            listOf(
+                "Five minutes is the real deal, not a trick. Quit at five if you want to.",
+                "You've got a first move now. That's the only thing that was missing.",
+            ),
+        ),
+        landingBridge = CopyPool(
+            listOf(
+                "Go — that first move, right now, badly if necessary.",
+                "Back to it. Five minutes. The clock is on your side this time.",
+            ),
+        ),
+    )
+
+    // ------------------------------------------------------------ Head Down
+
+    val HEAD_DOWN = SessionScript(
+        id = "head_down_v1",
+        displayName = "Head Down",
+        modality = Modality.CALM,
+        evidence = Evidence(
+            grade = 3,
+            citation = "Bernardi, Porta & Sleight, 2006, Heart",
+            finding = "Two-minute pauses of complete silence lowered heart rate and blood " +
+                "pressure more than any music condition — and more than the baseline quiet " +
+                "people arrived in. Cutting input, not adding a soothing one, did the work.",
+        ),
+        arrivalDefault = CopyPool(
+            listOf(
+                "Too much coming in. This one takes input away instead of adding more.",
+                "Nothing to listen to, nothing to look at. That's the entire treatment.",
+                "Your senses are full. Let's close the doors for a minute.",
+            ),
+        ),
+        guide = listOf(
+            GuideStep.Move(
+                instruction = CopyPool(
+                    listOf(
+                        "Fold your arms on the desk and rest your forehead on them. Eyes closed.",
+                        "Head down on your arms, like a school desk nap. Shut your eyes.",
+                    ),
+                ),
+                holdSec = 15,
+                poseAsset = "pose_head_down",
+            ),
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Screen's going dark. Stay down. Nothing to track for the next minute.",
+                        "Going quiet now. Your arms block the light; we'll handle the time.",
+                    ),
+                ),
+                dwellSec = 60,
+                dimScreen = true, // the point of the session: one less thing emitting
+            ),
+        ),
+        landingClose = CopyPool(
+            listOf(
+                "Come up slowly. Notice the room is quieter than it was — same room, different you.",
+                "That was a minute of nothing coming in. Your ears will notice first.",
+            ),
+        ),
+        landingBridge = CopyPool(
+            listOf(
+                "Back to it — headphones on for the next stretch, if you can swing it.",
+                "Go on. Take the quiet with you as long as it lasts.",
+            ),
+        ),
+    )
+
+    // ------------------------------------------------------------ Top Up
+
+    val TOP_UP = SessionScript(
+        id = "top_up_v1",
+        displayName = "Top Up",
+        // Deliberately not MOVE despite involving standing up: this is an errand, not
+        // activation, and thirst doesn't observe quiet hours — MOVE would night-veto it.
+        modality = Modality.AMBIENT,
+        evidence = Evidence(
+            grade = 4,
+            citation = "Ganio et al., 2011, British Journal of Nutrition",
+            finding = "Mild dehydration alone — around 1% body mass, well before thirst feels " +
+                "urgent — degraded working memory, raised fatigue and worsened mood in " +
+                "healthy adults. The fix is water, not willpower.",
+        ),
+        requirements = setOf(Requirement.WATER_ACCESS),
+        arrivalDefault = CopyPool(
+            listOf(
+                "This isn't a focus problem. You haven't eaten, drunk, or stood up.",
+                "Before any technique: water. The rest of it can't work around an empty tank.",
+                "Cheapest fix available. Go get it.",
+            ),
+        ),
+        guide = listOf(
+            GuideStep.Move(
+                instruction = CopyPool(
+                    listOf(
+                        "Stand up and go fill a full glass of water. Actually full. We'll wait.",
+                        "Get water — a real glass, not the two inches left in the old one.",
+                    ),
+                ),
+                holdSec = 45,
+            ),
+            GuideStep.Move(
+                instruction = CopyPool(
+                    listOf(
+                        "Drink most of it now, while you're standing there.",
+                        "Drink it down. Standing, not at the desk.",
+                    ),
+                ),
+                holdSec = 20,
+            ),
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Two more while you're up: something to eat if you haven't, and the bathroom if it's been on hold.",
+                        "Grab food with actual substance on the way back — and go if you've been holding it. Both count.",
+                    ),
+                ),
+                dwellSec = 15,
+            ),
+        ),
+        landingClose = CopyPool(
+            listOf(
+                "That's a chunk of the afternoon slump handled, and it wasn't discipline.",
+                "Body first. Everything you were trying to force gets easier from here.",
+            ),
+        ),
+        landingBridge = CopyPool(
+            listOf(
+                "Back to it — refill before the glass is empty next time.",
+                "Go on. Keep the glass in sight and this one takes care of itself.",
+            ),
+        ),
+    )
+
+    // ------------------------------------------------------------ The Log
+
+    val THE_LOG = SessionScript(
+        id = "the_log_v1",
+        displayName = "The Log",
+        modality = Modality.MIND,
+        evidence = Evidence(
+            grade = 4,
+            citation = "Gable, Reis, Impett & Asher, 2004, Journal of Personality and Social Psychology",
+            finding = "Capitalization: actively marking a good event — telling someone, or " +
+                "dwelling on it deliberately — produced benefits above and beyond the event " +
+                "itself, including higher daily positive affect.",
+        ),
+        arrivalDefault = CopyPool(
+            listOf(
+                "Good run. These get forgotten by Thursday unless you pin them down.",
+                "Wins evaporate faster than problems do. Thirty seconds to make this one stick.",
+                "You did the thing. Let's make sure future-you remembers it.",
+            ),
+        ),
+        guide = listOf(
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "One sentence: what did you just get done?",
+                        "Say what you finished. Plainly, no hedging, no 'just'.",
+                    ),
+                ),
+                dwellSec = 20,
+            ),
+            GuideStep.Prompt(
+                text = CopyPool(
+                    listOf(
+                        "Now the part that was actually hard. What did you do that made it work?",
+                        "Which bit took something out of you? That's the part worth keeping.",
+                    ),
+                ),
+                dwellSec = 20,
+            ),
+        ),
+        landingClose = CopyPool(
+            listOf(
+                "That was yours. Not luck, not the deadline — you did that.",
+                "Logged. It'll still count on the day you need evidence you're any good at this.",
+            ),
+        ),
+        landingBridge = CopyPool(
+            listOf(
+                "Back to it while the momentum's hot.",
+                "Go on — and stop before you burn the whole tank on a good day.",
+            ),
+        ),
+    )
+
     // ------------------------------------------------------------ catalog
 
     private val ALL = listOf(
         THE_SIGH, HORIZON, THE_UNFOLD, EMBER,
         UNCLENCH, THE_LOOP, WRISTS_AND_HANDS, FERN, THE_CLIMB, STEP_OUTSIDE,
         WARMTH, THREE_GOOD_THINGS, MINI_UNPACK, THE_SETTLE, THE_SWEEP, THE_PLUNGE, REACH_OUT,
+        THE_DETOUR, THE_FIRST_MINUTE, HEAD_DOWN, TOP_UP, THE_LOG,
     )
 
     fun byId(id: String): SessionScript? = ALL.find { it.id == id }

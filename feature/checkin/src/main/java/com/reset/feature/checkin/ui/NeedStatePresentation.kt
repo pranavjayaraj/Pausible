@@ -17,6 +17,11 @@ fun NeedState.labelRes(): Int = when (this) {
     NeedState.CANT_WIND_DOWN -> R.string.checkin_need_cant_wind_down
     NeedState.OVERWHELMED -> R.string.checkin_need_overwhelmed
     NeedState.DISCONNECTED -> R.string.checkin_need_disconnected
+    NeedState.CONFUSED_LOST -> R.string.checkin_need_confused_lost
+    NeedState.TASK_PARALYSIS -> R.string.checkin_need_task_paralysis
+    NeedState.SENSORY_OVERLOAD -> R.string.checkin_need_sensory_overload
+    NeedState.BIOLOGICAL_DEPLETION -> R.string.checkin_need_biological_depletion
+    NeedState.ACCOMPLISHED_FLOW -> R.string.checkin_need_accomplished_flow
 }
 
 /** Empathy-toned offer palette (design "3c") for the two feelings-first NeedStates. */

@@ -29,6 +29,13 @@ object SessionSelector {
         NeedState.CANT_WIND_DOWN to listOf(SessionScripts.EMBER, SessionScripts.THE_SWEEP),
         NeedState.OVERWHELMED to listOf(SessionScripts.THE_PLUNGE, SessionScripts.THE_SIGH),
         NeedState.DISCONNECTED to listOf(SessionScripts.REACH_OUT, SessionScripts.WARMTH, SessionScripts.THREE_GOOD_THINGS),
+        NeedState.CONFUSED_LOST to listOf(SessionScripts.THE_DETOUR, SessionScripts.STEP_OUTSIDE, SessionScripts.THE_SETTLE),
+        NeedState.TASK_PARALYSIS to listOf(SessionScripts.THE_FIRST_MINUTE, SessionScripts.THE_SETTLE, SessionScripts.THE_SIGH),
+        NeedState.SENSORY_OVERLOAD to listOf(SessionScripts.HEAD_DOWN, SessionScripts.THE_SWEEP, SessionScripts.FERN),
+        // Water first; if there's no tap, movement and daylight are the next-best things for
+        // a body that's been sitting hungry — neither pretends to be the actual fix.
+        NeedState.BIOLOGICAL_DEPLETION to listOf(SessionScripts.TOP_UP, SessionScripts.STEP_OUTSIDE, SessionScripts.THE_LOOP),
+        NeedState.ACCOMPLISHED_FLOW to listOf(SessionScripts.THE_LOG, SessionScripts.THREE_GOOD_THINGS, SessionScripts.THE_UNFOLD),
     )
 
     /** Requirement-free, always-servable — the universal fallback so this never returns empty. */

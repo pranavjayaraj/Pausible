@@ -27,6 +27,8 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    // EmbedModelManager's Play Asset Delivery orchestration (the :model_pack download).
+    implementation(libs.play.assetDelivery.ktx)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

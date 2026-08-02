@@ -1,11 +1,16 @@
 package com.reset.feature.checkin
 
 import androidx.lifecycle.SavedStateHandle
+import com.reset.feature.checkin.classify.CascadeNeedStateClassifier
+import com.reset.feature.checkin.classify.EmbeddingNeedStateClassifier
+import com.reset.feature.checkin.classify.FakeTextEmbedder
 import com.reset.feature.checkin.classify.LexiconNeedStateClassifier
+import com.reset.feature.checkin.classify.NeedStateClassifier
 import com.reset.feature.checkin.navigation.CheckInIntent
 import com.reset.feature.checkin.navigation.CheckInSideEffect
 import com.reset.feature.sessions.api.SessionDestination
 import com.reset.feature.sessions.api.SessionsDestination
+import com.reset.model.domain.checkin.EmbedModelManager
 import com.reset.model.domain.checkin.InputMethod
 import com.reset.model.domain.checkin.NeedState
 import com.reset.model.domain.model.HomePreferences
@@ -29,6 +34,16 @@ class CheckInViewModelTest {
         val preferencesRepository: FakePreferencesRepository = FakePreferencesRepository(),
         val senseSuggestionRepository: FakeSenseSuggestionRepository = FakeSenseSuggestionRepository(),
         val timeProvider: FakeTimeProvider = FakeTimeProvider(),
+        // Real Tier-1 (pure, dependency-free) + Tier-2 wired to a not-ready-by-default fake
+        // embedder — matches real DI wiring (CheckInModule binds the cascade, not bare
+        // Lexicon) and preserves every existing Tier-1-only test's behavior unchanged, since
+        // a not-ready Tier-2 never resolves anything.
+        val embedder: FakeTextEmbedder = FakeTextEmbedder(alwaysFails = true),
+        val embedModelManager: FakeEmbedModelManager = FakeEmbedModelManager(),
+        val needStateClassifier: NeedStateClassifier = CascadeNeedStateClassifier(
+            tier1 = LexiconNeedStateClassifier(),
+            tier2 = EmbeddingNeedStateClassifier(embedder) { emptyMap() },
+        ),
     ) {
         val viewModel = CheckInViewModel(
             SavedStateHandle(),
@@ -41,7 +56,8 @@ class CheckInViewModelTest {
             preferencesRepository,
             senseSuggestionRepository,
             timeProvider,
-            LexiconNeedStateClassifier(),
+            needStateClassifier,
+            embedModelManager,
         )
 
         /** Suspends until the next navigation event — the race-free assertion point for
@@ -483,6 +499,85 @@ class CheckInViewModelTest {
 
             assertEquals(CheckInSideEffect.UnrecognizedText, awaitSideEffect())
             assertTrue(harness.checkInPropensityLog.logged.isEmpty())
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    // ------------------------------------------------------------ Tier-2 model download
+
+    @Test
+    fun `a confident Send never touches the embed model manager`() = runTest {
+        val harness = Harness()
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("my eyes are so tired and blurry"))
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+            awaitUntil { it.step is CheckInStep.Offer }
+
+            assertEquals(0, harness.embedModelManager.fetchCallCount)
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `unsure text with the model not ready triggers a background fetch and still falls back to chips`() = runTest {
+        val harness = Harness(
+            preferencesRepository = FakePreferencesRepository(HomePreferences(quietHoursEnabled = false)),
+            timeProvider = FakeTimeProvider(hour = 15),
+            embedModelManager = FakeEmbedModelManager(ready = false),
+        )
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("asdfghjkl"))
+            awaitUntil { it.chatText == "asdfghjkl" }
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            assertEquals(CheckInSideEffect.UnrecognizedText, awaitSideEffect())
+            val fetching = awaitUntil { it.embedModelFetching }
+            assertTrue(fetching.embedModelFetching)
+            assertEquals(1, harness.embedModelManager.fetchCallCount)
+            // Chips remain the floor: nothing was ever offered for this input.
+            assertTrue(harness.checkInPropensityLog.logged.isEmpty())
+
+            // The fake's default fetch completes immediately with Downloaded.
+            awaitUntil { !it.embedModelFetching }
+
+            cancelAndIgnoreRemainingItems()
+        }
+    }
+
+    @Test
+    fun `unsure text with the model ready uses Tier-2's result and never fetches`() = runTest {
+        val prototypeVector = floatArrayOf(0f, 0f, 1f)
+        val embedder = FakeTextEmbedder(mapOf("asdfghjkl" to prototypeVector))
+        val classifier = CascadeNeedStateClassifier(
+            tier1 = LexiconNeedStateClassifier(),
+            tier2 = EmbeddingNeedStateClassifier(embedder) { mapOf(NeedState.DRAINED to listOf(prototypeVector)) },
+        )
+        val harness = Harness(
+            embedder = embedder,
+            embedModelManager = FakeEmbedModelManager(ready = true),
+            needStateClassifier = classifier,
+        )
+
+        harness.viewModel.test(this) {
+            expectInitialState()
+            runOnCreate()
+
+            containerHost.handleCheckInIntent(CheckInIntent.ChatTextChanged("asdfghjkl"))
+            containerHost.handleCheckInIntent(CheckInIntent.SendChat)
+
+            val offer = awaitUntil { it.step is CheckInStep.Offer }.step as CheckInStep.Offer
+            assertEquals(NeedState.DRAINED, offer.needState)
+            assertEquals(0, harness.embedModelManager.fetchCallCount)
 
             cancelAndIgnoreRemainingItems()
         }

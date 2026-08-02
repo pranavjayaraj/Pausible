@@ -8,4 +8,10 @@ sealed class CheckInSideEffect {
 
     /** Voice mode isn't wired yet. */
     data object VoiceComingSoon : CheckInSideEffect()
+
+    /** Play wants explicit consent before spending cellular data on the embedding model
+     *  download — the Route resolves this by calling
+     *  `EmbedModelManager.confirmCellularDownload(activity)` with its own transient Activity,
+     *  never the ViewModel (leak-safe activity-launching rule). */
+    data object RequestCellularConfirmation : CheckInSideEffect()
 }

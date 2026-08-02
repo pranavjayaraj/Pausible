@@ -10,6 +10,7 @@
     <string name="checkin_voice_coming_soon">Voice is coming soon — type or tap a chip for now.</string>
     <string name="checkin_voice_tap">Voice coming soon</string>
     <string name="checkin_unrecognized">Didn\'t quite catch that — tap one below?</string>
+    <string name="checkin_embed_model_fetching">Getting smarter — I\'ll understand better next time</string>
     <string name="checkin_just_browsing">Not now — just browsing</string>
     <string name="checkin_finding">Finding your minute…</string>
     <string name="checkin_sense_caption">Sprout\'s guess — you\'ve been sitting a while. Yours to change.</string>
@@ -70,4 +71,10 @@
     <string name="checkin_need_cant_wind_down">CAN\'T WIND DOWN</string>
     <string name="checkin_need_overwhelmed">OVERWHELMED</string>
     <string name="checkin_need_disconnected">FEELING DISCONNECTED</string>
+    <!-- Text-only needs: no chip reaches these, so the eyebrow is the only place they show. -->
+    <string name="checkin_need_confused_lost">BEING STUCK</string>
+    <string name="checkin_need_task_paralysis">NOT STARTING</string>
+    <string name="checkin_need_sensory_overload">TOO MUCH NOISE</string>
+    <string name="checkin_need_biological_depletion">RUNNING ON EMPTY</string>
+    <string name="checkin_need_accomplished_flow">A GOOD RUN</string>
 </resources>

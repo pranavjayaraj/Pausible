@@ -25,6 +25,10 @@ data class CheckInState(
     /** How the in-flight need was produced (chip tap vs typed text) — threaded to the
      *  propensity log so text vs chip selection can be compared. Survives the follow-up. */
     val originInputMethod: InputMethod = InputMethod.CHIP,
+    /** True while the Tier-2 embedding model's Play Asset Delivery pack is downloading in
+     *  the background — a subtle, non-blocking cue ("getting smarter for next time"), never
+     *  a spinner on Send. This Send's input already fell back to Tier-1 + chips. */
+    val embedModelFetching: Boolean = false,
 ) {
     val sendEnabled: Boolean get() = chatText.isNotBlank()
 

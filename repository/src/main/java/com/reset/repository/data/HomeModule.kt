@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.reset.model.domain.breakprefs.BreakPreferencesRepository
 import com.reset.model.domain.CelebrationStore
 import com.reset.model.domain.checkin.CheckInPropensityLog
+import com.reset.model.domain.checkin.EmbedModelManager
 import com.reset.model.domain.closeperson.ClosePersonRepository
 import com.reset.model.domain.mood.MoodRepository
 import com.reset.model.domain.preferences.PreferencesRepository
@@ -16,6 +17,7 @@ import com.reset.model.domain.SoundController
 import com.reset.model.domain.stats.StatsRepository
 import com.reset.model.domain.TimeProvider
 import com.reset.repository.data.breakprefs.BreakPreferencesRepositoryImpl
+import com.reset.repository.data.checkin.AssetPackEmbedModelManager
 import com.reset.repository.data.checkin.CheckInPropensityLogImpl
 import com.reset.repository.data.closeperson.ClosePersonRepositoryImpl
 import com.reset.repository.data.mood.MoodRepositoryImpl
@@ -56,6 +58,9 @@ abstract class HomeModule {
 
     @Binds
     abstract fun bindCheckInPropensityLog(impl: CheckInPropensityLogImpl): CheckInPropensityLog
+
+    @Binds
+    abstract fun bindEmbedModelManager(impl: AssetPackEmbedModelManager): EmbedModelManager
 
     @Binds
     abstract fun bindMoodRepository(impl: MoodRepositoryImpl): MoodRepository
